@@ -13,6 +13,7 @@ import dev.shadowsoffire.gateways.gate.GatewayRegistry;
 import dev.shadowsoffire.gateways.item.GatePearlItem;
 import dev.shadowsoffire.placebo.registry.DeferredHelper;
 import dev.shadowsoffire.placebo.dynreg.DynamicHolder;
+import dev.architectury.registry.registries.RegistrySupplier;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.particles.ParticleType;
@@ -48,12 +49,12 @@ public class GatewayObjects {
         .sized(2F, 3F)
         .build(ResourceKey.create(Registries.ENTITY_TYPE, Gateways.loc("gateway"))));
 
-    public static final Holder<Item> GATE_PEARL = R.item("gate_pearl", GatePearlItem::new, p -> p.rarity(Rarity.UNCOMMON));
+    public static final RegistrySupplier<Item> GATE_PEARL = R.item("gate_pearl", GatePearlItem::new, p -> p.rarity(Rarity.UNCOMMON));
 
-    public static final Holder<SoundEvent> GATE_AMBIENT = sound("gate_ambient");
-    public static final Holder<SoundEvent> GATE_WARP = sound("gate_warp");
-    public static final Holder<SoundEvent> GATE_START = sound("gate_start");
-    public static final Holder<SoundEvent> GATE_END = sound("gate_end");
+    public static final RegistrySupplier<SoundEvent> GATE_AMBIENT = sound("gate_ambient");
+    public static final RegistrySupplier<SoundEvent> GATE_WARP = sound("gate_warp");
+    public static final RegistrySupplier<SoundEvent> GATE_START = sound("gate_start");
+    public static final RegistrySupplier<SoundEvent> GATE_END = sound("gate_end");
 
     public static final Supplier<ParticleType<GatewayParticleData>> GLOW = R.particle("glow", () -> new ParticleType<GatewayParticleData>(false){
 
@@ -69,7 +70,7 @@ public class GatewayObjects {
 
     });
 
-    public static final Holder<CreativeModeTab> TAB = R.creativeTab("tab", b -> b.title(Component.translatable("itemGroup.gateways")).icon(() -> GATE_PEARL.value().getDefaultInstance()));
+    public static final RegistrySupplier<CreativeModeTab> TAB = R.creativeTab("tab", b -> b.title(Component.translatable("itemGroup.gateways")).icon(() -> GATE_PEARL.get().getDefaultInstance()));
 
     public static final Identifier GATES_DEFEATED = R.custom("gates_defeated", Registries.CUSTOM_STAT, Gateways.loc("gates_defeated"));
 
@@ -77,7 +78,7 @@ public class GatewayObjects {
 
     public static final FinishGatewayTrigger FINISH_GATEWAY = R.criteriaTrigger("finish_gateway", new FinishGatewayTrigger());
 
-    private static Holder<SoundEvent> sound(String name) {
+    private static RegistrySupplier<SoundEvent> sound(String name) {
         return R.sound(name, () -> SoundEvent.createVariableRangeEvent(Gateways.loc(name)));
     }
 

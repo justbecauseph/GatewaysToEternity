@@ -22,7 +22,7 @@ public class GatewayJEIPlugin implements IModPlugin {
 
     @Override
     public void registerItemSubtypes(ISubtypeRegistration reg) {
-        reg.registerSubtypeInterpreter(GatewayObjects.GATE_PEARL.value(), new GateOpenerSubtypes());
+        reg.registerSubtypeInterpreter(GatewayObjects.GATE_PEARL.get(), new GateOpenerSubtypes());
     }
 
     @Override

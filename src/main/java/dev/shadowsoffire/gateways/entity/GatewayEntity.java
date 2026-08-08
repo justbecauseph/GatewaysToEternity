@@ -292,7 +292,7 @@ public abstract class GatewayEntity extends Entity implements IEntityWithComplex
      */
     protected void completeGateway() {
         this.remove(RemovalReason.KILLED);
-        this.playSound(GatewayObjects.GATE_END.value(), 16, 1);
+        this.playSound(GatewayObjects.GATE_END.get(), 16, 1);
 
         AABB completionBB = this.getBoundingBox().inflate(10 + this.getGateway().rules().leashRange());
         this.level().getEntitiesOfClass(Player.class, completionBB).forEach(p -> {
@@ -305,7 +305,7 @@ public abstract class GatewayEntity extends Entity implements IEntityWithComplex
     }
 
     public void onGateCreated() {
-        this.playSound(GatewayObjects.GATE_START.value(), 1, 1);
+        this.playSound(GatewayObjects.GATE_START.get(), 1, 1);
         NeoForge.EVENT_BUS.post(new GateEvent.Opened(this));
     }
 
@@ -542,7 +542,7 @@ public abstract class GatewayEntity extends Entity implements IEntityWithComplex
         i.setPos(this.getX() + Mth.nextDouble(this.random, -0.5, 0.5), this.getY() + 1.5, this.getZ() + Mth.nextDouble(this.random, -0.5, 0.5));
         i.setDeltaMovement(Mth.nextDouble(this.random, -0.15, 0.15), 0.4, Mth.nextDouble(this.random, -0.15, 0.15));
         this.level().addFreshEntity(i);
-        this.level().playSound(null, i.getX(), i.getY(), i.getZ(), GatewayObjects.GATE_WARP, SoundSource.HOSTILE, 0.25F, 2.0F);
+        this.level().playSound(null, i.getX(), i.getY(), i.getZ(), GatewayObjects.GATE_WARP.asHolder(), SoundSource.HOSTILE, 0.25F, 2.0F);
     }
 
     public void spawnCompletionItem(ItemStack stack) {

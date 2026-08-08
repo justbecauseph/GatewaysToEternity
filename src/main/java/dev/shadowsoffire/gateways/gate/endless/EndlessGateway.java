@@ -44,13 +44,13 @@ public record EndlessGateway(Size size, TextColor color, Wave baseWave, List<End
             SpawnAlgorithms.CODEC.optionalFieldOf("spawn_algorithm", SpawnAlgorithms.OPEN_FIELD).forGetter(EndlessGateway::spawnAlgo),
             GateRules.CODEC.optionalFieldOf("rules", GateRules.DEFAULT).forGetter(EndlessGateway::rules),
             BossEventSettings.CODEC.optionalFieldOf("boss_event", BossEventSettings.DEFAULT).forGetter(EndlessGateway::bossSettings),
-            BuiltInRegistries.SOUND_EVENT.holderByNameCodec().optionalFieldOf("soundtrack", GatewayObjects.GATE_AMBIENT).forGetter(EndlessGateway::soundtrack))
+            BuiltInRegistries.SOUND_EVENT.holderByNameCodec().optionalFieldOf("soundtrack", GatewayObjects.GATE_AMBIENT.asHolder()).forGetter(EndlessGateway::soundtrack))
         .apply(inst, EndlessGateway::new));
 
     @Deprecated // back-compat ctor
     public EndlessGateway(Size size, TextColor color, Wave baseWave, List<EndlessModifier> modifiers, List<Failure> failures, SpawnAlgorithm spawnAlgo, GateRules rules,
         BossEventSettings bossSettings) {
-        this(size, color, baseWave, modifiers, failures, spawnAlgo, rules, bossSettings, GatewayObjects.GATE_AMBIENT);
+        this(size, color, baseWave, modifiers, failures, spawnAlgo, rules, bossSettings, GatewayObjects.GATE_AMBIENT.asHolder());
     }
 
     @Override
@@ -86,7 +86,7 @@ public record EndlessGateway(Size size, TextColor color, Wave baseWave, List<End
         private SpawnAlgorithm spawnAlgo = SpawnAlgorithms.OPEN_FIELD;
         private GateRules rules = GateRules.DEFAULT;
         private BossEventSettings bossSettings = BossEventSettings.DEFAULT;
-        private Holder<SoundEvent> soundtrack = GatewayObjects.GATE_AMBIENT;
+        private Holder<SoundEvent> soundtrack = GatewayObjects.GATE_AMBIENT.asHolder();
 
         public Builder size(Gateway.Size size) {
             this.size = size;

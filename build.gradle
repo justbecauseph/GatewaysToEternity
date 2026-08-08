@@ -93,6 +93,10 @@ repositories {
         }
     }
     maven {
+        // Architectury -- required transitively by Placebo since its Phase 2a split.
+        url "https://maven.architectury.dev/"
+    }
+    maven {
         // Shadows
         url "https://maven.shadowsoffire.dev/releases"
         content {
@@ -110,6 +114,7 @@ configurations {
 
 dependencies {
     if (project.mixin.toBoolean())                   annotationProcessor "org.spongepowered:mixin:${mixinVersion}:processor"
+    if (project.hasProperty('architecturyVersion'))     implementation      "dev.architectury:architectury-neoforge:${architecturyVersion}"
     if (project.hasProperty('placeboVersion'))       implementation      "dev.shadowsoffire:Placebo:${mcVersion}-${placeboVersion}"
     if (project.hasProperty('jeiVersion'))           localImplementation "mezz.jei:jei-${mcVersion}-neoforge:${jeiVersion}"
     if (project.hasProperty('jadeVersion'))          localImplementation "snownee.jade:Jade-NeoForge:${mcVersion}-${jadeVersion}"

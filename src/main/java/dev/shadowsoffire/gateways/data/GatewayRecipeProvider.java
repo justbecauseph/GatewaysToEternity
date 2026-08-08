@@ -82,7 +82,7 @@ public class GatewayRecipeProvider extends LegacyRecipeProvider {
         DataComponentPatch patch = DataComponentPatch.builder()
             .set(GatewayObjects.GATEWAY_COMPONENT, GatewayRegistry.INSTANCE.holder(key))
             .build();
-        ItemStackTemplate result = new ItemStackTemplate(GatewayObjects.GATE_PEARL.value().builtInRegistryHolder(), 1, patch);
+        ItemStackTemplate result = new ItemStackTemplate(GatewayObjects.GATE_PEARL.get().builtInRegistryHolder(), 1, patch);
         addShaped(key, "gateways", result, width, height, input);
     }
 
@@ -91,7 +91,7 @@ public class GatewayRecipeProvider extends LegacyRecipeProvider {
         DataComponentPatch patch = DataComponentPatch.builder()
             .set(GatewayObjects.GATEWAY_COMPONENT, GatewayRegistry.INSTANCE.holder(Gateways.loc(gatewayPath)))
             .build();
-        ItemStackTemplate template = new ItemStackTemplate(GatewayObjects.GATE_PEARL.value().builtInRegistryHolder(), 1, patch);
+        ItemStackTemplate template = new ItemStackTemplate(GatewayObjects.GATE_PEARL.get().builtInRegistryHolder(), 1, patch);
         return DataComponentIngredient.of(false, template);
     }
 }

@@ -131,7 +131,7 @@ public class GatePearlItem extends Item implements ITabFiller, SpecialTooltipIte
 
     public static void generateGatePearlStacks(Consumer<ItemStack> output) {
         GatewayRegistry.INSTANCE.getValues().stream().sorted(Comparator.comparing(Gateway::size).thenComparing(GatewayRegistry.INSTANCE::getKey)).forEach(gate -> {
-            ItemStack stack = new ItemStack(GatewayObjects.GATE_PEARL);
+            ItemStack stack = new ItemStack(GatewayObjects.GATE_PEARL.get());
             setGate(stack, gate);
             output.accept(stack);
         });

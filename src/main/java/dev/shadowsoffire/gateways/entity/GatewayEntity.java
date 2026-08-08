@@ -50,6 +50,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -641,7 +642,7 @@ public abstract class GatewayEntity extends Entity implements IEntityWithComplex
     }
 
     public static void spawnLightningOn(Entity entity, boolean effectOnly) {
-        LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(entity.level(), EntitySpawnReason.TRIGGERED);
+        LightningBolt bolt = EntityTypes.LIGHTNING_BOLT.create(entity.level(), EntitySpawnReason.TRIGGERED);
         bolt.setPos(entity.getX(), entity.getY(), entity.getZ());
         bolt.setVisualOnly(effectOnly);
         entity.level().addFreshEntity(bolt);

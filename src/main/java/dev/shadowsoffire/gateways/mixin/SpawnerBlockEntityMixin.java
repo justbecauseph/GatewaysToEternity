@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.BlockEntityTypes;
 
 @Mixin(BlockEntityType.class)
 public class SpawnerBlockEntityMixin {
@@ -15,7 +16,7 @@ public class SpawnerBlockEntityMixin {
      */
     @Inject(at = @At("HEAD"), method = "onlyOpCanSetNbt()Z", require = 1, remap = false, cancellable = true)
     private void gateways_allowSetNbt(CallbackInfoReturnable<Boolean> cir) {
-        if ((Object) this == BlockEntityType.MOB_SPAWNER) {
+        if ((Object) this == BlockEntityTypes.MOB_SPAWNER) {
             cir.setReturnValue(false);
         }
     }

@@ -33,6 +33,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Entity.RemovalReason;
 import net.minecraft.world.entity.EntityProcessor;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntitySpawnRequest;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
@@ -181,7 +182,7 @@ public interface Reward extends CodecProvider<Reward> {
 
                 CompoundTag data = this.nbt != null ? this.nbt.copy() : new CompoundTag();
                 data.putString("id", BuiltInRegistries.ENTITY_TYPE.getKey(this.type).toString());
-                Entity entity = EntityType.loadEntityRecursive(data, level, EntitySpawnReason.SPAWNER, EntityProcessor.NOP);
+                Entity entity = EntityType.loadEntityRecursive(data, level, new EntitySpawnRequest(EntitySpawnReason.SPAWNER, false), EntityProcessor.NOP);
                 if (entity == null) return;
                 entity.getPersistentData().putBoolean("apoth.no_pinata", true);
                 for (int i = 0; i < this.rolls; i++) {

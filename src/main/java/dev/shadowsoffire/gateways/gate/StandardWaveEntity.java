@@ -21,6 +21,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityProcessor;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntitySpawnRequest;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -42,7 +43,7 @@ public record StandardWaveEntity(EntityType<?> type, Optional<String> desc, Opti
     public LivingEntity createEntity(ServerLevel level, GatewayEntity gate) {
         CompoundTag data = tag.orElse(new CompoundTag());
         data.putString("id", EntityType.getKey(type).toString());
-        Entity ent = EntityType.loadEntityRecursive(data, level, EntitySpawnReason.SPAWNER, EntityProcessor.NOP);
+        Entity ent = EntityType.loadEntityRecursive(data, level, new EntitySpawnRequest(EntitySpawnReason.SPAWNER, false), EntityProcessor.NOP);
         if (ent == null) {
             Gateways.logSpawnDebug(gate, this, "Entity deserialization returned null");
             return null;

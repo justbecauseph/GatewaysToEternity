@@ -1,3 +1,8 @@
+## 7.0.0
+* Ported to Minecraft 26.2.
+* Updated to Placebo 11.0.0 and Apothic Attributes 4.0.0.
+* The generated crafting recipes no longer carry a `category` field, since 26.2 removed the recipe book category from crafting recipes.
+
 ## 6.0.2
 * Updated to Placebo 10.0.2.
 * Fixed endless gateways crashing when an attribute wave modifier was applied multiple times in one wave. Fixes Apotheosis#1768.

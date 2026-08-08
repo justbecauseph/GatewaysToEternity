@@ -8,9 +8,9 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.shadowsoffire.gateways.gate.Gateway;
 import dev.shadowsoffire.gateways.gate.GatewayRegistry;
 import dev.shadowsoffire.placebo.dynreg.DynamicHolder;
-import net.minecraft.advancements.criterion.ContextAwarePredicate;
-import net.minecraft.advancements.criterion.EntityPredicate;
-import net.minecraft.advancements.criterion.SimpleCriterionTrigger;
+import net.minecraft.advancements.predicates.ContextAwarePredicate;
+import net.minecraft.advancements.predicates.entity.EntityPredicate;
+import net.minecraft.advancements.triggers.SimpleCriterionTrigger;
 import net.minecraft.server.level.ServerPlayer;
 
 public class FinishGatewayTrigger extends SimpleCriterionTrigger<FinishGatewayTrigger.Instance> {

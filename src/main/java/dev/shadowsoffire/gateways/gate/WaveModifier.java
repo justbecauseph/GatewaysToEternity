@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import dev.shadowsoffire.apothic_attributes.ApothicAttributes;
+import dev.shadowsoffire.apothic_attributes.ApothicAttributesNeoForge;
 import dev.shadowsoffire.gateways.Gateways;
 import dev.shadowsoffire.gateways.entity.GatewayEntity;
 import dev.shadowsoffire.placebo.codec.CodecMap;
@@ -132,7 +132,7 @@ public interface WaveModifier extends CodecProvider<WaveModifier> {
 
         @Override
         public void appendHoverText(TooltipContext ctx, Consumer<MutableComponent> list) {
-            list.accept(modifier.attribute().value().toComponent(modifier.createDeterministic(modifier.modifierId()), ApothicAttributes.getTooltipFlag()));
+            list.accept(modifier.attribute().value().toComponent(modifier.createDeterministic(modifier.modifierId()), ApothicAttributesNeoForge.getTooltipFlag()));
         }
 
         public static AttributeModifier create(Holder<Attribute> attribute, Operation op, float value) {

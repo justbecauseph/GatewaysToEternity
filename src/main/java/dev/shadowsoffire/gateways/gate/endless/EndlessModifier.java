@@ -8,6 +8,7 @@ import com.google.common.base.Preconditions;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import dev.architectury.registry.registries.RegistrySupplier;
 import dev.shadowsoffire.gateways.gate.Reward;
 import dev.shadowsoffire.gateways.gate.WaveEntity;
 import dev.shadowsoffire.gateways.gate.WaveModifier;
@@ -86,6 +87,16 @@ public record EndlessModifier(ApplicationMode appMode, List<WaveEntity> entities
 
         public Builder attribute(Holder<Attribute> attribute, Operation op, float value) {
             return this.modifier(WaveModifier.AttributeModifier.create(attribute, op, value));
+        }
+
+        /**
+         * Convenience overload for modded attributes, which are {@link RegistrySupplier}s rather than holders.
+         * <p>
+         * Only safe because builders are used from datagen, which runs well after registration -- see the note
+         * on {@code EndlessGateway.CODEC} for what happens when {@code asHolder()} is reached any earlier.
+         */
+        public Builder attribute(RegistrySupplier<Attribute> attribute, Operation op, float value) {
+            return this.attribute(attribute.asHolder(), op, value);
         }
 
         public Builder modifiers(List<WaveModifier> modifiers) {

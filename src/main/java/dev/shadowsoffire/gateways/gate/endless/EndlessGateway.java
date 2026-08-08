@@ -9,6 +9,7 @@ import java.util.function.UnaryOperator;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import dev.architectury.registry.registries.RegistrySupplier;
 import dev.shadowsoffire.gateways.GatewayObjects;
 import dev.shadowsoffire.gateways.client.EndlessGateClient;
 import dev.shadowsoffire.gateways.entity.EndlessGatewayEntity;
@@ -34,7 +35,16 @@ import net.minecraft.world.level.Level;
 public record EndlessGateway(Size size, TextColor color, Wave baseWave, List<EndlessModifier> modifiers, List<Failure> failures, SpawnAlgorithm spawnAlgo, GateRules rules,
     BossEventSettings bossSettings, Holder<SoundEvent> soundtrack) implements Gateway {
 
-    public static final Codec<EndlessGateway> CODEC = RecordCodecBuilder.create(inst -> inst
+    /**
+     * Lazily initialized because the soundtrack default calls {@link RegistrySupplier#asHolder()}.
+     * <p>
+     * {@code asHolder()} resolves through the registrar and returns null until registration has run, and
+     * {@code optionalFieldOf} captures its default eagerly -- so building this codec during class-init would
+     * bake in a null default permanently. That is not hypothetical here: {@code GatewayObjects} touches
+     * {@link GatewayRegistry#INSTANCE} while registering its data component, which pulls this class in before
+     * any sound is registered. Deferring to first use moves the capture to datapack load, well after.
+     */
+    public static final Codec<EndlessGateway> CODEC = Codec.lazyInitialized(() -> RecordCodecBuilder.create(inst -> inst
         .group(
             Size.CODEC.fieldOf("size").forGetter(EndlessGateway::size),
             TextColor.CODEC.fieldOf("color").forGetter(EndlessGateway::color),
@@ -45,7 +55,7 @@ public record EndlessGateway(Size size, TextColor color, Wave baseWave, List<End
             GateRules.CODEC.optionalFieldOf("rules", GateRules.DEFAULT).forGetter(EndlessGateway::rules),
             BossEventSettings.CODEC.optionalFieldOf("boss_event", BossEventSettings.DEFAULT).forGetter(EndlessGateway::bossSettings),
             BuiltInRegistries.SOUND_EVENT.holderByNameCodec().optionalFieldOf("soundtrack", GatewayObjects.GATE_AMBIENT.asHolder()).forGetter(EndlessGateway::soundtrack))
-        .apply(inst, EndlessGateway::new));
+        .apply(inst, EndlessGateway::new)));
 
     @Deprecated // back-compat ctor
     public EndlessGateway(Size size, TextColor color, Wave baseWave, List<EndlessModifier> modifiers, List<Failure> failures, SpawnAlgorithm spawnAlgo, GateRules rules,

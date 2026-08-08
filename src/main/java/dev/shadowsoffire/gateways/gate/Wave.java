@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
+import dev.architectury.registry.registries.RegistrySupplier;
 import dev.shadowsoffire.gateways.GatewayObjects;
 import dev.shadowsoffire.gateways.Gateways;
 import dev.shadowsoffire.gateways.entity.GatewayEntity;
@@ -206,6 +207,14 @@ public record Wave(List<WaveEntity> entities, List<WaveModifier> modifiers, List
 
         public Builder attribute(Holder<Attribute> attribute, Operation op, float value) {
             return this.modifier(WaveModifier.AttributeModifier.create(attribute, op, value));
+        }
+
+        /**
+         * Convenience overload for modded attributes, which are {@link RegistrySupplier}s rather than holders.
+         * Datagen-time only; see {@code EndlessModifier.Builder#attribute}.
+         */
+        public Builder attribute(RegistrySupplier<Attribute> attribute, Operation op, float value) {
+            return this.attribute(attribute.asHolder(), op, value);
         }
 
         /**

@@ -94,12 +94,4 @@ public class GatewaysNeoForge {
             .build());
     }
 
-
-    public static void logSpawnDebug(GatewayEntity gate, WaveEntity entity, String failureReason) {
-        Gateways.LOGGER.debug("Failed to spawn entity '{}' for gateway '{}' at position {}. Reason: {}",
-            entity.getDescription().getString(),
-            GatewayRegistry.INSTANCE.holder(gate.getGateway()).getId(),
-            gate.blockPosition(),
-            failureReason);
-    }
 }

@@ -28,6 +28,21 @@ public interface WaveEntity extends CodecProvider<WaveEntity> {
     }
 
     /**
+     * Logs why a wave entity could not be spawned.
+     * <p>
+     * Lives here rather than on the NeoForge entrypoint, where it used to: it is plain logging over
+     * {@link GatewayEntity} and {@link WaveEntity}, so keeping it beside them means it travels with them
+     * rather than pinning both of its callers to the platform side.
+     */
+    public static void logSpawnDebug(GatewayEntity gate, WaveEntity entity, String failureReason) {
+        Gateways.LOGGER.debug("Failed to spawn entity '{}' for gateway '{}' at position {}. Reason: {}",
+            entity.getDescription().getString(),
+            GatewayRegistry.INSTANCE.holder(gate.getGateway()).getId(),
+            gate.blockPosition(),
+            failureReason);
+    }
+
+    /**
      * Creates the entity to be spawned in the current wave.
      *
      * @param level The level.

@@ -12,7 +12,6 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.architectury.registry.registries.RegistrySupplier;
 import dev.shadowsoffire.gateways.GatewayObjects;
 import dev.shadowsoffire.gateways.Gateways;
-import dev.shadowsoffire.gateways.GatewaysNeoForge;
 import dev.shadowsoffire.gateways.entity.GatewayEntity;
 import dev.shadowsoffire.gateways.entity.GatewayEntity.FailureReason;
 import dev.shadowsoffire.gateways.event.GateEvents;
@@ -37,7 +36,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import dev.architectury.hooks.level.entity.PlayerHooks;
-import net.neoforged.neoforge.event.EventHooks;
+import dev.shadowsoffire.placebo.util.MobSpawnHelper;
 
 /**
  * A single wave of a gateway.
@@ -105,13 +104,13 @@ public record Wave(List<WaveEntity> entities, List<WaveModifier> modifiers, List
     public static LivingEntity spawnWaveEntity(ServerLevel level, Vec3 pos, GatewayEntity gate, Wave wave, WaveEntity waveEntity) {
         LivingEntity entity = waveEntity.createEntity(level, gate);
         if (entity == null) {
-            GatewaysNeoForge.logSpawnDebug(gate, waveEntity, "Entity creation returned null");
+            WaveEntity.logSpawnDebug(gate, waveEntity, "Entity creation returned null");
             return null;
         }
 
         Vec3 spawnPos = gate.getGateway().spawnAlgo().spawn(level, pos, gate, entity);
         if (spawnPos == null) {
-            GatewaysNeoForge.logSpawnDebug(gate, waveEntity, "Spawn algorithm returned null position");
+            WaveEntity.logSpawnDebug(gate, waveEntity, "Spawn algorithm returned null position");
             return null;
         }
 
@@ -128,7 +127,7 @@ public record Wave(List<WaveEntity> entities, List<WaveModifier> modifiers, List
 
         if (entity instanceof Mob mob) {
             if (waveEntity.shouldFinalizeSpawn()) {
-                EventHooks.finalizeMobSpawn(mob, level, level.getCurrentDifficultyAt(entity.blockPosition()), EntitySpawnReason.SPAWNER, null);
+                MobSpawnHelper.finalizeSpawn(mob, level, level.getCurrentDifficultyAt(entity.blockPosition()), EntitySpawnReason.SPAWNER, null);
             }
             Player summoner = gate.summonerOrClosest();
             if (!PlayerHooks.isFake(summoner)) {

@@ -30,7 +30,8 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.fml.loading.FMLEnvironment;
+import dev.architectury.platform.Platform;
+import dev.architectury.utils.Env;
 import dev.shadowsoffire.placebo.tabs.TabFillContext;
 
 public class GatePearlItem extends Item implements ITabFiller, SpecialTooltipItem {
@@ -114,7 +115,7 @@ public class GatePearlItem extends Item implements ITabFiller, SpecialTooltipIte
         if (!holder.isBound()) {
             tooltip.accept(Gateways.lang("text", "errored_gate_pearl", holder.getId().toString()));
         }
-        else if (FMLEnvironment.getDist().isClient()) {
+        else if (Platform.getEnvironment() == Env.CLIENT) {
             holder.get().appendPearlTooltip(ctx, tooltip, flag);
         }
     }

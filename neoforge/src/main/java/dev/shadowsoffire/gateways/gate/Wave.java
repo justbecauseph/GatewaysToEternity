@@ -36,6 +36,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import dev.architectury.hooks.level.entity.PlayerHooks;
+import dev.shadowsoffire.placebo.util.PersistentData;
 import dev.shadowsoffire.placebo.util.MobSpawnHelper;
 
 /**
@@ -114,7 +115,7 @@ public record Wave(List<WaveEntity> entities, List<WaveModifier> modifiers, List
             return null;
         }
 
-        entity.getPersistentData().store("gateways.owner", UUIDUtil.CODEC, gate.getUUID());
+        PersistentData.of(entity).store("gateways.owner", UUIDUtil.CODEC, gate.getUUID());
         entity.snapTo(spawnPos.x(), spawnPos.y(), spawnPos.z(), level.getRandom().nextFloat() * 360, level.getRandom().nextFloat() * 360);
 
         entity.getPassengersAndSelf().filter(e -> e instanceof LivingEntity).map(LivingEntity.class::cast).forEach(e -> {

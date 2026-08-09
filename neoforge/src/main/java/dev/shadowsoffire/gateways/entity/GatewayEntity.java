@@ -26,6 +26,7 @@ import dev.shadowsoffire.gateways.gate.SpawnAlgorithms.SpawnAlgorithm;
 import dev.shadowsoffire.gateways.gate.Wave;
 import dev.shadowsoffire.gateways.gate.normal.NormalGateway;
 import dev.shadowsoffire.gateways.payloads.ParticlePayload;
+import dev.shadowsoffire.placebo.util.PersistentData;
 import dev.shadowsoffire.placebo.dynreg.DynamicHolder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -614,8 +615,8 @@ public abstract class GatewayEntity extends Entity implements EntitySpawnExtensi
      * @param outcome The new entity.
      */
     public void handleConversion(Entity entity, LivingEntity outcome) {
-        entity.getPersistentData().remove("gateways.owner");
-        outcome.getPersistentData().store("gateways.owner", UUIDUtil.CODEC, this.getUUID());
+        PersistentData.of(entity).remove("gateways.owner");
+        PersistentData.of(outcome).store("gateways.owner", UUIDUtil.CODEC, this.getUUID());
 
         if (this.unresolvedWaveEntities.contains(entity.getUUID())) {
             this.unresolvedWaveEntities.remove(entity.getUUID());
@@ -673,7 +674,7 @@ public abstract class GatewayEntity extends Entity implements EntitySpawnExtensi
 
     @Nullable
     public static GatewayEntity getOwner(Entity entity) {
-        return entity.getPersistentData().read("gateways.owner", UUIDUtil.CODEC).map(id -> {
+        return PersistentData.of(entity).read("gateways.owner", UUIDUtil.CODEC).map(id -> {
             if (entity.level() instanceof ServerLevel sl && sl.getEntity(id) instanceof GatewayEntity gate && gate.isValid()) {
                 return gate;
             }

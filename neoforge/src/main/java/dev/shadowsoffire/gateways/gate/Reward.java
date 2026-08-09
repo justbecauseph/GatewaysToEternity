@@ -12,6 +12,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import dev.shadowsoffire.gateways.Gateways;
 import dev.shadowsoffire.gateways.entity.GatewayEntity;
+import dev.shadowsoffire.placebo.util.PersistentData;
 import dev.shadowsoffire.placebo.codec.CodecMap;
 import dev.shadowsoffire.placebo.codec.CodecProvider;
 import dev.shadowsoffire.placebo.json.NBTAdapter;
@@ -163,7 +164,7 @@ public interface Reward extends CodecProvider<Reward> {
                 data.putString("id", BuiltInRegistries.ENTITY_TYPE.getKey(this.type).toString());
                 Entity entity = EntityType.loadEntityRecursive(data, level, new EntitySpawnRequest(EntitySpawnReason.SPAWNER, false), EntityProcessor.NOP);
                 if (entity == null) return;
-                entity.getPersistentData().putBoolean("apoth.no_pinata", true);
+                PersistentData.of(entity).putBoolean("apoth.no_pinata", true);
                 if (entity instanceof LivingEntity living) {
                     Optional<ResourceKey<LootTable>> table = living.getLootTable();
                     for (int i = 0; i < this.rolls && table.isPresent(); i++) {

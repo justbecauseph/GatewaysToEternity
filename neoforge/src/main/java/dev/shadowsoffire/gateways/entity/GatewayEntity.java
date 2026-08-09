@@ -63,7 +63,7 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.util.FakePlayer;
+import dev.architectury.hooks.level.entity.PlayerHooks;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 import dev.shadowsoffire.placebo.network.PayloadSender;
@@ -211,7 +211,7 @@ public abstract class GatewayEntity extends Entity implements IEntityWithComplex
                     if (this.tickCount % 100 == 0 && entity instanceof Mob mob) {
                         if (!(mob.getTarget() instanceof Player)) {
                             Player p = summonerOrClosest();
-                            if (!(p instanceof FakePlayer)) {
+                            if (!PlayerHooks.isFake(p)) {
                                 mob.setTarget(p);
                             }
                         }
@@ -635,7 +635,7 @@ public abstract class GatewayEntity extends Entity implements IEntityWithComplex
         this.spawnParticle(entity.getX(), entity.getY(), entity.getZ(), ParticlePayload.EffectType.SPAWNED);
         if (entity instanceof Mob mob) {
             Player p = summonerOrClosest();
-            if (!(p instanceof FakePlayer)) mob.setTarget(p);
+            if (!PlayerHooks.isFake(p)) mob.setTarget(p);
         }
         return true;
     }

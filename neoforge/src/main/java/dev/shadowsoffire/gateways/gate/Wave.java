@@ -36,7 +36,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.util.FakePlayer;
+import dev.architectury.hooks.level.entity.PlayerHooks;
 import net.neoforged.neoforge.event.EventHooks;
 
 /**
@@ -131,7 +131,7 @@ public record Wave(List<WaveEntity> entities, List<WaveModifier> modifiers, List
                 EventHooks.finalizeMobSpawn(mob, level, level.getCurrentDifficultyAt(entity.blockPosition()), EntitySpawnReason.SPAWNER, null);
             }
             Player summoner = gate.summonerOrClosest();
-            if (!(summoner instanceof FakePlayer)) {
+            if (!PlayerHooks.isFake(summoner)) {
                 mob.setTarget(summoner);
             }
             mob.setPersistenceRequired();

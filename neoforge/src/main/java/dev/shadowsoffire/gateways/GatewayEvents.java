@@ -8,7 +8,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.common.util.FakePlayer;
+import dev.architectury.hooks.level.entity.PlayerHooks;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityTeleportEvent;
 import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
@@ -49,7 +49,7 @@ public class GatewayEvents {
     public void hurt(LivingIncomingDamageEvent e) {
         GatewayEntity gate = GatewayEntity.getOwner(e.getEntity());
         if (gate != null) {
-            boolean isPlayerDamage = e.getSource().getEntity() instanceof Player p && !(p instanceof FakePlayer);
+            boolean isPlayerDamage = e.getSource().getEntity() instanceof Player p && !PlayerHooks.isFake(p);
             if (!isPlayerDamage && gate.getGateway().rules().playerDamageOnly()) e.setCanceled(true);
         }
     }

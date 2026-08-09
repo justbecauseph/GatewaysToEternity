@@ -183,8 +183,8 @@ public class EndlessGateClient {
         int textY = y - lineHeight;
 
         pose.pushMatrix();
-        gfx.blitSprite(GatewaysClient.BLIT_PIPELINE, GatewaysClient.WHITE_BACKGROUND, x, yBar1, 182, 5, tintColor);
-        gfx.blitSprite(GatewaysClient.BLIT_PIPELINE, GatewaysClient.WHITE_BACKGROUND, x, yBar2, 182, 5, tintColor);
+        gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_BACKGROUND, x, yBar1, 182, 5, tintColor);
+        gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_BACKGROUND, x, yBar2, 182, 5, tintColor);
         pose.popMatrix();
 
         int barWidth = 183;
@@ -193,20 +193,20 @@ public class EndlessGateClient {
         if (gate.isWaveActive()) {
             barWidth = (int) (183.0F * enemies / maxEnemies);
             if (barWidth > 0) {
-                gfx.blitSprite(GatewaysClient.BLIT_PIPELINE, GatewaysClient.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar1, barWidth, 5, tintColor);
+                gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar1, barWidth, 5, tintColor);
             }
 
             barWidth = (int) ((maxTime - gate.getTicksActive()) / maxTime * 183.0F);
             if (barWidth > 0) {
-                gfx.blitSprite(GatewaysClient.BLIT_PIPELINE, GatewaysClient.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar2, barWidth, 5, tintColor);
+                gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar2, barWidth, 5, tintColor);
             }
         }
         else {
             maxTime = gate.getSetupTime();
             barWidth = (int) (gate.getTicksActive() / maxTime * 183.0F);
             if (barWidth > 0) {
-                gfx.blitSprite(GatewaysClient.BLIT_PIPELINE, GatewaysClient.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar1, barWidth, 5, tintColor);
-                gfx.blitSprite(GatewaysClient.BLIT_PIPELINE, GatewaysClient.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar2, barWidth, 5, tintColor);
+                gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar1, barWidth, 5, tintColor);
+                gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar2, barWidth, 5, tintColor);
             }
         }
 

@@ -33,9 +33,6 @@ import net.neoforged.neoforge.common.NeoForge;
 @EventBusSubscriber(value = Dist.CLIENT, modid = Gateways.MODID)
 public class GatewaysClient {
 
-    public static final Identifier WHITE_PROGRESS = Identifier.withDefaultNamespace("boss_bar/white_progress");
-    public static final Identifier WHITE_BACKGROUND = Identifier.withDefaultNamespace("boss_bar/white_background");
-    public static final RenderPipeline BLIT_PIPELINE = RenderPipelines.GUI_TEXTURED;
 
     @Nullable
     public static Rect2i bossBarRect = null;

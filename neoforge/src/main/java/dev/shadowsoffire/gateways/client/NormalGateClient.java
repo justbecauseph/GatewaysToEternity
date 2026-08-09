@@ -139,8 +139,8 @@ public class NormalGateClient {
         int y2 = y + 10 + Minecraft.getInstance().font.lineHeight;
 
         pose.pushMatrix();
-        gfx.blitSprite(GatewaysClient.BLIT_PIPELINE, GatewaysClient.WHITE_BACKGROUND, x, y, 182, 5, tintColor);
-        gfx.blitSprite(GatewaysClient.BLIT_PIPELINE, GatewaysClient.WHITE_BACKGROUND, x, y2, 182, 5, tintColor);
+        gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_BACKGROUND, x, y, 182, 5, tintColor);
+        gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_BACKGROUND, x, y2, 182, 5, tintColor);
         pose.popMatrix();
 
         float waveProgress = 1F / maxWave;
@@ -149,21 +149,21 @@ public class NormalGateClient {
 
         int i = (int) (progress * 183.0F);
         if (i > 0) {
-            gfx.blitSprite(GatewaysClient.BLIT_PIPELINE, GatewaysClient.WHITE_PROGRESS, 182, 5, 0, 0, x, y, i, 5, tintColor);
+            gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_PROGRESS, 182, 5, 0, 0, x, y, i, 5, tintColor);
         }
 
         float maxTime = gate.getMaxWaveTime();
         if (gate.isWaveActive()) {
             i = (int) ((maxTime - gate.getTicksActive()) / maxTime * 183.0F);
             if (i > 0) {
-                gfx.blitSprite(GatewaysClient.BLIT_PIPELINE, GatewaysClient.WHITE_PROGRESS, 182, 5, 0, 0, x, y2, i, 5, tintColor);
+                gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_PROGRESS, 182, 5, 0, 0, x, y2, i, 5, tintColor);
             }
         }
         else {
             maxTime = gate.getSetupTime();
             i = (int) (gate.getTicksActive() / maxTime * 183.0F);
             if (i > 0) {
-                gfx.blitSprite(GatewaysClient.BLIT_PIPELINE, GatewaysClient.WHITE_PROGRESS, 182, 5, 0, 0, x, y2, i, 5, tintColor);
+                gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_PROGRESS, 182, 5, 0, 0, x, y2, i, 5, tintColor);
             }
         }
 

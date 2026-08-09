@@ -56,7 +56,7 @@ public class GatewayRenderer extends EntityRenderer<GatewayEntity, GatewayRender
         state.tickCount = entity.tickCount;
         state.bbHeight = entity.getBbHeight();
         state.setupTime = entity.getSetupTime();
-        state.partialTick = partialTicks;
+        state.partialTicks = partialTicks;
 
         if (entity.isValid()) {
             state.baseScale = entity.getGateway().size().getScale();
@@ -152,7 +152,7 @@ public class GatewayRenderer extends EntityRenderer<GatewayEntity, GatewayRender
     public void submit(GatewayRenderState state, PoseStack matrix, SubmitNodeCollector collector, CameraRenderState camera) {
         if (!state.valid) return;
 
-        float partialTicks = state.partialTick;
+        float partialTicks = state.partialTicks;
         float baseScale = state.baseScale;
         float scale = baseScale;
 
@@ -222,8 +222,8 @@ public class GatewayRenderer extends EntityRenderer<GatewayEntity, GatewayRender
         int lineHeight = font.lineHeight;
 
         TextureAtlas guiAtlas = Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.GUI);
-        TextureAtlasSprite bgSprite = guiAtlas.getSprite(GatewaysClient.WHITE_BACKGROUND);
-        TextureAtlasSprite progressSprite = guiAtlas.getSprite(GatewaysClient.WHITE_PROGRESS);
+        TextureAtlasSprite bgSprite = guiAtlas.getSprite(BossBarSprites.WHITE_BACKGROUND);
+        TextureAtlasSprite progressSprite = guiAtlas.getSprite(BossBarSprites.WHITE_PROGRESS);
 
         matrix.pushPose();
         matrix.translate(0.0F, state.bbHeight + 1, 0.0F);

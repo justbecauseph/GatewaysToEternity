@@ -4,6 +4,13 @@ import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.network.chat.Component;
 
 public class GatewayRenderState extends EntityRenderState {
+    /**
+     * Set and read by {@code GatewayRenderer}. NeoForge adds a {@code partialTick} field to vanilla's
+     * {@link EntityRenderState}; vanilla has only {@code ageInTicks}, and an access widener cannot add a
+     * field. Named distinctly rather than matching NeoForge's, so this never silently shadows it.
+     */
+    public float partialTicks;
+
     public boolean valid;
     public float baseScale;
     public float clientScale;

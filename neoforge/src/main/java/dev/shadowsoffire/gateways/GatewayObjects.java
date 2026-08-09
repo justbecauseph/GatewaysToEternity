@@ -36,15 +36,15 @@ public class GatewayObjects {
 
     public static final Supplier<EntityType<NormalGatewayEntity>> NORMAL_GATEWAY = R.entity("normal_gateway", () -> EntityType.Builder
         .<NormalGatewayEntity>of(NormalGatewayEntity::new, MobCategory.MISC)
-        .setTrackingRange(5)
-        .setUpdateInterval(20)
+        .clientTrackingRange(5)
+        .updateInterval(20)
         .sized(2F, 3F)
         .build(ResourceKey.create(Registries.ENTITY_TYPE, Gateways.loc("gateway"))));
 
     public static final Supplier<EntityType<EndlessGatewayEntity>> ENDLESS_GATEWAY = R.entity("endless_gateway", () -> EntityType.Builder
         .<EndlessGatewayEntity>of(EndlessGatewayEntity::new, MobCategory.MISC)
-        .setTrackingRange(5)
-        .setUpdateInterval(20)
+        .clientTrackingRange(5)
+        .updateInterval(20)
         .sized(2F, 3F)
         .build(ResourceKey.create(Registries.ENTITY_TYPE, Gateways.loc("gateway"))));
 

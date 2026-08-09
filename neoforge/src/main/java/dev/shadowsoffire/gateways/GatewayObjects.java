@@ -29,7 +29,6 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
-import net.neoforged.bus.api.IEventBus;
 
 public class GatewayObjects {
 
@@ -82,8 +81,7 @@ public class GatewayObjects {
         return R.sound(name, () -> SoundEvent.createVariableRangeEvent(Gateways.loc(name)));
     }
 
-    static void bootstrap(IEventBus bus) {
-        bus.register(R);
+    static void bootstrap() {
         // Architectury's DeferredRegister only stages entries; nothing reaches a registry until this
         // runs. Must come last, after every nested bootstrap has forced its class-init and staged its
         // suppliers. Safe this early on both loaders: Architectury queues NeoForge registrations until

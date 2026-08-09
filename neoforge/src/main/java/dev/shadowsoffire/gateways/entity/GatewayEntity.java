@@ -64,7 +64,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import dev.architectury.hooks.level.entity.PlayerHooks;
-import net.neoforged.neoforge.common.util.FakePlayerFactory;
+import dev.shadowsoffire.placebo.util.FakePlayerHelper;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 import dev.shadowsoffire.placebo.network.PayloadSender;
 
@@ -333,7 +333,7 @@ public abstract class GatewayEntity extends Entity implements IEntityWithComplex
 
         if (player == null) {
             GameProfile profile = new GameProfile(this.summonerId, "Gateway_Summoner");
-            return FakePlayerFactory.get((ServerLevel) this.level(), profile);
+            return FakePlayerHelper.get((ServerLevel) this.level(), profile);
         }
 
         this.knownPlayer = new WeakReference<>(player);

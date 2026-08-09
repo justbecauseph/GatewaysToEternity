@@ -31,7 +31,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import dev.shadowsoffire.placebo.tabs.TabFillContext;
 
 public class GatePearlItem extends Item implements ITabFiller, SpecialTooltipItem {
 
@@ -104,7 +104,7 @@ public class GatePearlItem extends Item implements ITabFiller, SpecialTooltipIte
     }
 
     @Override
-    public void fillItemCategory(CreativeModeTab group, BuildCreativeModeTabContentsEvent event) {
+    public void fillItemCategory(CreativeModeTab group, TabFillContext event) {
         generateGatePearlStacks(event::accept);
     }
 

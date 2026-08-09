@@ -1,0 +1,25 @@
+loom {
+    accessWidenerPath = file("src/main/resources/gateways.accesswidener")
+}
+
+architectury {
+    common(rootProject.platforms.split(","))
+}
+
+dependencies {
+    // Fabric loader is on the compile classpath only for its @Environment annotations.
+    // Do NOT use any other class from it in common code.
+    implementation "net.fabricmc:fabric-loader:${rootProject.fabricLoaderVersion}"
+
+    api "dev.architectury:architectury:${rootProject.architecturyVersion}"
+
+    // Placebo publishes one shadowed jar holding both its common and platform classes. Compiling
+    // against it here is fine -- javac resolves only what is referenced, and reaching for anything
+    // platform-side fails loudly rather than silently.
+    api "dev.shadowsoffire:Placebo:${rootProject.mcVersion}-${rootProject.placeboVersion}"
+    api "dev.shadowsoffire:ApothicAttributes:${rootProject.mcVersion}-${rootProject.attributeslibVersion}"
+
+    // javax.annotation.Nullable came transitively from the NeoForge dependency in the old
+    // single-project build. Common has no NeoForge on its classpath, so it must be declared.
+    compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+}

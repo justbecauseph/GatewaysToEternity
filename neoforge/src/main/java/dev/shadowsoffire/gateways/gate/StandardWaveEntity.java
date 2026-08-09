@@ -11,6 +11,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import dev.architectury.registry.registries.RegistrySupplier;
 import dev.shadowsoffire.gateways.Gateways;
+import dev.shadowsoffire.gateways.GatewaysNeoForge;
 import dev.shadowsoffire.gateways.entity.GatewayEntity;
 import dev.shadowsoffire.placebo.json.NBTAdapter;
 import net.minecraft.core.Holder;
@@ -46,7 +47,7 @@ public record StandardWaveEntity(EntityType<?> type, Optional<String> desc, Opti
         data.putString("id", EntityType.getKey(type).toString());
         Entity ent = EntityType.loadEntityRecursive(data, level, new EntitySpawnRequest(EntitySpawnReason.SPAWNER, false), EntityProcessor.NOP);
         if (ent == null) {
-            Gateways.logSpawnDebug(gate, this, "Entity deserialization returned null");
+            GatewaysNeoForge.logSpawnDebug(gate, this, "Entity deserialization returned null");
             return null;
         }
 
@@ -55,7 +56,7 @@ public record StandardWaveEntity(EntityType<?> type, Optional<String> desc, Opti
             return living;
         }
 
-        Gateways.logSpawnDebug(gate, this, "Deserialized entity is not a LivingEntity");
+        GatewaysNeoForge.logSpawnDebug(gate, this, "Deserialized entity is not a LivingEntity");
         return null;
     }
 

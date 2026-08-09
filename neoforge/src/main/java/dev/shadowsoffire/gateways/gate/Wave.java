@@ -12,6 +12,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.architectury.registry.registries.RegistrySupplier;
 import dev.shadowsoffire.gateways.GatewayObjects;
 import dev.shadowsoffire.gateways.Gateways;
+import dev.shadowsoffire.gateways.GatewaysNeoForge;
 import dev.shadowsoffire.gateways.entity.GatewayEntity;
 import dev.shadowsoffire.gateways.entity.GatewayEntity.FailureReason;
 import dev.shadowsoffire.gateways.event.GateEvent;
@@ -105,13 +106,13 @@ public record Wave(List<WaveEntity> entities, List<WaveModifier> modifiers, List
     public static LivingEntity spawnWaveEntity(ServerLevel level, Vec3 pos, GatewayEntity gate, Wave wave, WaveEntity waveEntity) {
         LivingEntity entity = waveEntity.createEntity(level, gate);
         if (entity == null) {
-            Gateways.logSpawnDebug(gate, waveEntity, "Entity creation returned null");
+            GatewaysNeoForge.logSpawnDebug(gate, waveEntity, "Entity creation returned null");
             return null;
         }
 
         Vec3 spawnPos = gate.getGateway().spawnAlgo().spawn(level, pos, gate, entity);
         if (spawnPos == null) {
-            Gateways.logSpawnDebug(gate, waveEntity, "Spawn algorithm returned null position");
+            GatewaysNeoForge.logSpawnDebug(gate, waveEntity, "Spawn algorithm returned null position");
             return null;
         }
 

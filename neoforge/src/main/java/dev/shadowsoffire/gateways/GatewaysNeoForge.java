@@ -33,12 +33,10 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 @Mod(Gateways.MODID)
-public class Gateways {
+public class GatewaysNeoForge {
 
-    public static final String MODID = "gateways";
-    public static final Logger LOGGER = LoggerFactory.getLogger("Gateways to Eternity");
 
-    public Gateways(IEventBus bus) {
+    public GatewaysNeoForge(IEventBus bus) {
         bus.register(this);
         PayloadHelper.registerPayload(new ParticlePayload.Provider());
         NeoForge.EVENT_BUS.register(new GatewayEvents());
@@ -62,7 +60,7 @@ public class Gateways {
     @SubscribeEvent
     public void data(GatherDataEvent.Client e) {
         DataProvider.INDENT_WIDTH.set(4);
-        DataGenBuilder.create(MODID)
+        DataGenBuilder.create(Gateways.MODID)
             .provider(GatewayProvider::new)
             .provider(GearSetProvider::new)
             .provider(GatewayRecipeProvider::new)
@@ -96,27 +94,9 @@ public class Gateways {
             .build());
     }
 
-    public static Identifier loc(String path) {
-        return Identifier.fromNamespaceAndPath(MODID, path);
-    }
-
-    /**
-     * Constructs a mutable component with a lang key of the form "type.modid.path", using {@link Gateways#MODID}.
-     *
-     * @param type The type of language key, "misc", "info", "title", etc...
-     * @param path The path of the language key.
-     * @param args Translation arguments passed to the created translatable component.
-     */
-    public static MutableComponent lang(String type, String path, Object... args) {
-        return Component.translatable(langKey(type, path), args);
-    }
-
-    public static String langKey(String type, String path) {
-        return type + "." + MODID + "." + path;
-    }
 
     public static void logSpawnDebug(GatewayEntity gate, WaveEntity entity, String failureReason) {
-        LOGGER.debug("Failed to spawn entity '{}' for gateway '{}' at position {}. Reason: {}",
+        Gateways.LOGGER.debug("Failed to spawn entity '{}' for gateway '{}' at position {}. Reason: {}",
             entity.getDescription().getString(),
             GatewayRegistry.INSTANCE.holder(gate.getGateway()).getId(),
             gate.blockPosition(),

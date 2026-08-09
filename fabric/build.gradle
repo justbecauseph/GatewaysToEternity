@@ -1,0 +1,78 @@
+plugins {
+    id "com.gradleup.shadow" version "9.4.3"
+}
+
+loom {
+    accessWidenerPath = project(":common").loom.accessWidenerPath
+}
+
+architectury {
+    platformSetupLoomIde()
+    fabric()
+}
+
+configurations {
+    common
+    shadowCommon
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentFabric.extendsFrom common
+}
+
+dependencies {
+    // loom-no-remap has no mod* configurations -- nothing is remapped at 26.2, so these are plain deps.
+    implementation "net.fabricmc:fabric-loader:${rootProject.fabricLoaderVersion}"
+    api "net.fabricmc.fabric-api:fabric-api:${rootProject.fabricApiVersion}"
+
+    api "dev.architectury:architectury-fabric:${rootProject.architecturyVersion}"
+
+    // Placebo ships one shadowed jar per loader; the Fabric build needs the Fabric one, which is not
+    // published, so this consumes the sibling project's output directly for now.
+    api "dev.shadowsoffire:Placebo:${rootProject.mcVersion}-${rootProject.placeboVersion}"
+    api "dev.shadowsoffire:ApothicAttributes:${rootProject.mcVersion}-${rootProject.attributeslibVersion}"
+
+    // loom-no-remap: :common has no namedElements variant -- nothing is mapped, so depend on the plain project.
+    common(project(path: ":common")) { transitive false }
+    shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
+}
+
+// loom-no-remap has no remapJar task -- nothing is remapped at 26.2, so shadowJar produces the
+// final artifact directly, exactly as on the NeoForge side.
+jar {
+    archiveClassifier = "raw"
+}
+
+shadowJar {
+    exclude "architectury.common.json"
+
+    dependsOn jar
+    mainSpec.sourcePaths.clear()
+    from(zipTree(jar.archiveFile))
+    configurations = [project.configurations.shadowCommon]
+    archiveClassifier = null
+    zip64 = true
+}
+
+assemble.dependsOn shadowJar
+
+sourcesJar {
+    def commonSources = project(":common").tasks.named("sourcesJar")
+    dependsOn commonSources
+    from commonSources.map { zipTree(it.archiveFile) }
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version, "modid": rootProject.modid, "modName": rootProject.modName,
+            "desc": rootProject.desc, "author": rootProject.author, "javaVersion": rootProject.javaVersion,
+            "mcVersion": rootProject.mcVersion, "fabricLoaderVersion": rootProject.fabricLoaderVersion
+    }
+}
+
+if (!rootProject.enableTests.toBoolean()) {
+    sourceSets.remove(sourceSets.test)
+}
+
+// See the note in neoforge/build.gradle: module metadata would advertise the raw jar.
+tasks.withType(GenerateModuleMetadata).configureEach { enabled = false }

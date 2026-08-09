@@ -1,0 +1,5 @@
+accessWidener	v2	official
+
+accessible	field	net/minecraft/world/entity/Mob	persistenceRequired	Z
+accessible	field	net/minecraft/world/entity/Mob	dropChances	Lnet/minecraft/world/entity/DropChances;
+accessible	field	net/minecraft/world/entity/Mob	lootTable	Ljava/util/Optional;

@@ -1,5 +1,20 @@
+pluginManagement {
+    repositories {
+        maven { url "https://maven.fabricmc.net/" }
+        maven { url "https://maven.architectury.dev/" }
+        maven { url "https://maven.neoforged.net/releases/" }
+        gradlePluginPortal()
+    }
+}
 
 plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
 }
 
+// Phase 2a: Architectury split. The fabric subproject is a scaffold -- no mod code yet.
+// See porting/CHECKLIST.md in the Apotheosis repo.
+include("common")
+include("fabric")
+include("neoforge")
+
+rootProject.name = "GatewaysToEternity"

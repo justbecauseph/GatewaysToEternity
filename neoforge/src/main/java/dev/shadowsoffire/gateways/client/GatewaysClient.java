@@ -82,18 +82,5 @@ public class GatewaysClient {
         bossBarRect = new Rect2i(event.getX(), 0, 200, event.getY() + event.getIncrement());
     }
 
-    public static void drawReversedDropShadow(GuiGraphicsExtractor gfx, Font font, Component comp, int x, int y) {
-        gfx.text(font, comp, x, y, 0xFF000000, false);
-        Matrix3x2fStack pose = gfx.pose();
-        pose.pushMatrix();
-        pose.translate(1, 1);
-        int color = comp.getStyle().getColor().getValue();
-        int r = ((color >> 16) & 0xFF) / 4;
-        int g = ((color >> 8) & 0xFF) / 4;
-        int b = ((color) & 0xFF) / 4;
-        color = 0xFF << 24 | r << 16 | g << 8 | b;
-        gfx.text(font, comp.getString(), x, y, color, false);
-        pose.popMatrix();
-    }
 
 }

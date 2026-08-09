@@ -183,8 +183,8 @@ public class EndlessGateClient {
         int textY = y - lineHeight;
 
         pose.pushMatrix();
-        gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_BACKGROUND, x, yBar1, 182, 5, tintColor);
-        gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_BACKGROUND, x, yBar2, 182, 5, tintColor);
+        gfx.blitSprite(BossBarRendering.BLIT_PIPELINE, BossBarRendering.WHITE_BACKGROUND, x, yBar1, 182, 5, tintColor);
+        gfx.blitSprite(BossBarRendering.BLIT_PIPELINE, BossBarRendering.WHITE_BACKGROUND, x, yBar2, 182, 5, tintColor);
         pose.popMatrix();
 
         int barWidth = 183;
@@ -193,20 +193,20 @@ public class EndlessGateClient {
         if (gate.isWaveActive()) {
             barWidth = (int) (183.0F * enemies / maxEnemies);
             if (barWidth > 0) {
-                gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar1, barWidth, 5, tintColor);
+                gfx.blitSprite(BossBarRendering.BLIT_PIPELINE, BossBarRendering.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar1, barWidth, 5, tintColor);
             }
 
             barWidth = (int) ((maxTime - gate.getTicksActive()) / maxTime * 183.0F);
             if (barWidth > 0) {
-                gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar2, barWidth, 5, tintColor);
+                gfx.blitSprite(BossBarRendering.BLIT_PIPELINE, BossBarRendering.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar2, barWidth, 5, tintColor);
             }
         }
         else {
             maxTime = gate.getSetupTime();
             barWidth = (int) (gate.getTicksActive() / maxTime * 183.0F);
             if (barWidth > 0) {
-                gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar1, barWidth, 5, tintColor);
-                gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar2, barWidth, 5, tintColor);
+                gfx.blitSprite(BossBarRendering.BLIT_PIPELINE, BossBarRendering.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar1, barWidth, 5, tintColor);
+                gfx.blitSprite(BossBarRendering.BLIT_PIPELINE, BossBarRendering.WHITE_PROGRESS, 182, 5, 0, 0, x, yBar2, barWidth, 5, tintColor);
             }
         }
 
@@ -216,7 +216,7 @@ public class EndlessGateClient {
         int strWidth = font.width(component);
         int textX = x + 182 / 2 - strWidth / 2;
         if (isInWorld) {
-            GatewaysClient.drawReversedDropShadow(gfx, font, component, textX, textY);
+            BossBarRendering.drawReversedDropShadow(gfx, font, component, textX, textY);
         }
         else {
             gfx.text(font, component, textX, textY, 0xFFFFFFFF, true);
@@ -235,7 +235,7 @@ public class EndlessGateClient {
         textX = x + 182 / 2 - strWidth / 2;
         textY = yBar1 - lineHeight;
         if (isInWorld) {
-            GatewaysClient.drawReversedDropShadow(gfx, font, component, textX, textY);
+            BossBarRendering.drawReversedDropShadow(gfx, font, component, textX, textY);
         }
         else {
             gfx.text(font, component, textX, textY, 0xFFFFFFFF, true);
@@ -246,7 +246,7 @@ public class EndlessGateClient {
         textX = x + 182 / 2 - strWidth / 2;
         textY = yBar2 - lineHeight;
         if (isInWorld) {
-            GatewaysClient.drawReversedDropShadow(gfx, font, component, textX, textY);
+            BossBarRendering.drawReversedDropShadow(gfx, font, component, textX, textY);
         }
         else {
             gfx.text(font, component, textX, textY, 0xFFFFFFFF, true);

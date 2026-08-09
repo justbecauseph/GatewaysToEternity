@@ -139,8 +139,8 @@ public class NormalGateClient {
         int y2 = y + 10 + Minecraft.getInstance().font.lineHeight;
 
         pose.pushMatrix();
-        gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_BACKGROUND, x, y, 182, 5, tintColor);
-        gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_BACKGROUND, x, y2, 182, 5, tintColor);
+        gfx.blitSprite(BossBarRendering.BLIT_PIPELINE, BossBarRendering.WHITE_BACKGROUND, x, y, 182, 5, tintColor);
+        gfx.blitSprite(BossBarRendering.BLIT_PIPELINE, BossBarRendering.WHITE_BACKGROUND, x, y2, 182, 5, tintColor);
         pose.popMatrix();
 
         float waveProgress = 1F / maxWave;
@@ -149,21 +149,21 @@ public class NormalGateClient {
 
         int i = (int) (progress * 183.0F);
         if (i > 0) {
-            gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_PROGRESS, 182, 5, 0, 0, x, y, i, 5, tintColor);
+            gfx.blitSprite(BossBarRendering.BLIT_PIPELINE, BossBarRendering.WHITE_PROGRESS, 182, 5, 0, 0, x, y, i, 5, tintColor);
         }
 
         float maxTime = gate.getMaxWaveTime();
         if (gate.isWaveActive()) {
             i = (int) ((maxTime - gate.getTicksActive()) / maxTime * 183.0F);
             if (i > 0) {
-                gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_PROGRESS, 182, 5, 0, 0, x, y2, i, 5, tintColor);
+                gfx.blitSprite(BossBarRendering.BLIT_PIPELINE, BossBarRendering.WHITE_PROGRESS, 182, 5, 0, 0, x, y2, i, 5, tintColor);
             }
         }
         else {
             maxTime = gate.getSetupTime();
             i = (int) (gate.getTicksActive() / maxTime * 183.0F);
             if (i > 0) {
-                gfx.blitSprite(BossBarSprites.BLIT_PIPELINE, BossBarSprites.WHITE_PROGRESS, 182, 5, 0, 0, x, y2, i, 5, tintColor);
+                gfx.blitSprite(BossBarRendering.BLIT_PIPELINE, BossBarRendering.WHITE_PROGRESS, 182, 5, 0, 0, x, y2, i, 5, tintColor);
             }
         }
 
@@ -174,7 +174,7 @@ public class NormalGateClient {
         int textX = x + 182 / 2 - strWidth / 2;
         int textY = y - 9;
         if (isInWorld) {
-            GatewaysClient.drawReversedDropShadow(gfx, font, component, textX, textY);
+            BossBarRendering.drawReversedDropShadow(gfx, font, component, textX, textY);
         }
         else {
             gfx.text(font, component, textX, textY, 0xFFFFFFFF, true);
@@ -194,7 +194,7 @@ public class NormalGateClient {
         strWidth = font.width(component);
         textX = x + 182 / 2 - strWidth / 2;
         if (isInWorld) {
-            GatewaysClient.drawReversedDropShadow(gfx, font, component, textX, textY);
+            BossBarRendering.drawReversedDropShadow(gfx, font, component, textX, textY);
         }
         else {
             gfx.text(font, component, textX, textY, 0xFFFFFFFF, true);

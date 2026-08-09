@@ -222,8 +222,8 @@ public class GatewayRenderer extends EntityRenderer<GatewayEntity, GatewayRender
         int lineHeight = font.lineHeight;
 
         TextureAtlas guiAtlas = Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.GUI);
-        TextureAtlasSprite bgSprite = guiAtlas.getSprite(BossBarSprites.WHITE_BACKGROUND);
-        TextureAtlasSprite progressSprite = guiAtlas.getSprite(BossBarSprites.WHITE_PROGRESS);
+        TextureAtlasSprite bgSprite = guiAtlas.getSprite(BossBarRendering.WHITE_BACKGROUND);
+        TextureAtlasSprite progressSprite = guiAtlas.getSprite(BossBarRendering.WHITE_PROGRESS);
 
         matrix.pushPose();
         matrix.translate(0.0F, state.bbHeight + 1, 0.0F);

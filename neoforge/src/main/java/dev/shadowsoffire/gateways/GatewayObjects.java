@@ -84,5 +84,10 @@ public class GatewayObjects {
 
     static void bootstrap(IEventBus bus) {
         bus.register(R);
+        // Architectury's DeferredRegister only stages entries; nothing reaches a registry until this
+        // runs. Must come last, after every nested bootstrap has forced its class-init and staged its
+        // suppliers. Safe this early on both loaders: Architectury queues NeoForge registrations until
+        // RegisterEvent, and Fabric registers immediately.
+        R.registerAll();
     }
 }

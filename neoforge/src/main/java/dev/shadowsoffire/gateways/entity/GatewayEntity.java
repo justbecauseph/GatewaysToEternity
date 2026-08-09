@@ -30,7 +30,9 @@ import dev.shadowsoffire.placebo.dynreg.DynamicHolder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.UUIDUtil;
-import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -38,6 +40,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerBossEvent;
+import net.minecraft.server.level.ServerEntity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.PermissionSet;
@@ -63,12 +66,13 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import dev.architectury.extensions.network.EntitySpawnExtension;
 import dev.architectury.hooks.level.entity.PlayerHooks;
+import dev.architectury.networking.NetworkManager;
 import dev.shadowsoffire.placebo.util.FakePlayerHelper;
-import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 import dev.shadowsoffire.placebo.network.PayloadSender;
 
-public abstract class GatewayEntity extends Entity implements IEntityWithComplexSpawn {
+public abstract class GatewayEntity extends Entity implements EntitySpawnExtension {
 
     public static final EntityDataAccessor<Boolean> WAVE_ACTIVE = SynchedEntityData.defineId(GatewayEntity.class, EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<Integer> TICKS_ACTIVE = SynchedEntityData.defineId(GatewayEntity.class, EntityDataSerializers.INT);
@@ -554,12 +558,22 @@ public abstract class GatewayEntity extends Entity implements IEntityWithComplex
     }
 
     @Override
-    public void writeSpawnData(RegistryFriendlyByteBuf buf) {
+    public void saveAdditionalSpawnData(FriendlyByteBuf buf) {
         buf.writeIdentifier(this.gate.getId());
     }
 
+    /**
+     * NeoForge's {@code IEntityWithComplexSpawn} was wired up by the loader. Architectury's
+     * {@link EntitySpawnExtension} is not -- the entity has to return the packet that carries the extra data,
+     * on both loaders.
+     */
     @Override
-    public void readSpawnData(RegistryFriendlyByteBuf buf) {
+    public Packet<ClientGamePacketListener> getAddEntityPacket(ServerEntity serverEntity) {
+        return NetworkManager.createAddEntityPacket(this, serverEntity);
+    }
+
+    @Override
+    public void loadAdditionalSpawnData(FriendlyByteBuf buf) {
         this.gate = GatewayRegistry.INSTANCE.holder(buf.readIdentifier());
         if (!this.gate.isBound()) throw new RuntimeException("Invalid gateway received on client!");
         this.refreshDimensions();

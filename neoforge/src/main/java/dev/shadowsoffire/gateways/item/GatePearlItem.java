@@ -17,6 +17,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
@@ -120,14 +121,23 @@ public class GatePearlItem extends Item implements ITabFiller, SpecialTooltipIte
         }
     }
 
+    /**
+     * Attributes a gate pearl to whichever mod added its gateway, so pearls group under that mod in creative
+     * search rather than all under Gateways.
+     * <p>
+     * Deliberately <b>not</b> annotated {@code @Override}: this overrides a default method NeoForge adds to
+     * {@code Item}, which does not exist on Fabric. Declared without the annotation it still overrides on
+     * NeoForge and is simply never called on Fabric -- which is what keeps this class out of the platform
+     * source set for the sake of one cosmetic hook.
+     */
     @Nullable
-    @Override
     public String getCreatorModId(HolderLookup.Provider registries, ItemStack stack) {
         DynamicHolder<Gateway> gate = getGate(stack);
         if (gate.isBound()) {
             return gate.getId().getNamespace();
         }
-        return super.getCreatorModId(registries, stack);
+        // NeoForge's default resolves to the item's own registry namespace, which for this item is ours.
+        return BuiltInRegistries.ITEM.getKey(stack.getItem()).getNamespace();
     }
 
     public static void generateGatePearlStacks(Consumer<ItemStack> output) {

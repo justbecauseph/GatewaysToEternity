@@ -23,3 +23,10 @@ dependencies {
     // single-project build. Common has no NeoForge on its classpath, so it must be declared.
     compileOnly "com.google.code.findbugs:jsr305:3.0.2"
 }
+
+// Datagen stays NeoForge-only (it is the only loader with a data generator here), but its output is
+// loader-neutral JSON that both jars need. Writing it into :common is what gets it into both -- see
+// neoforge/build.gradle, which points the generator here.
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+}

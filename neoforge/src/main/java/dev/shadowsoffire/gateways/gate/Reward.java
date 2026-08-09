@@ -1,10 +1,6 @@
 package dev.shadowsoffire.gateways.gate;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Method;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -37,7 +33,6 @@ import net.minecraft.world.entity.EntitySpawnRequest;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
@@ -47,7 +42,6 @@ import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.fml.util.ObfuscationReflectionHelper;
 
 /**
  * A Reward is provided when a gateway wave is finished.
@@ -55,9 +49,6 @@ import net.neoforged.fml.util.ObfuscationReflectionHelper;
 public interface Reward extends CodecProvider<Reward> {
 
     public static final CodecMap<Reward> CODEC = new CodecMap<>("Gateway Reward");
-
-    public static final Method dropFromLootTable = ObfuscationReflectionHelper.findMethod(LivingEntity.class, "dropFromLootTable", ServerLevel.class, DamageSource.class, boolean.class);
-    public static final MethodHandle DROP_LOOT = lootMethodHandle();
 
     /**
      * Called when this reward is to be granted to the player, either on gate or wave completion.
@@ -85,16 +76,6 @@ public interface Reward extends CodecProvider<Reward> {
 
     private static void register(String id, Codec<? extends Reward> codec) {
         CODEC.register(Gateways.loc(id), codec);
-    }
-
-    private static MethodHandle lootMethodHandle() {
-        dropFromLootTable.setAccessible(true);
-        try {
-            return MethodHandles.lookup().unreflect(dropFromLootTable);
-        }
-        catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
     }
 
     /**
@@ -178,23 +159,25 @@ public interface Reward extends CodecProvider<Reward> {
         @Override
         public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list) {
             try {
-                List<ItemEntity> items = new ArrayList<>();
-
                 CompoundTag data = this.nbt != null ? this.nbt.copy() : new CompoundTag();
                 data.putString("id", BuiltInRegistries.ENTITY_TYPE.getKey(this.type).toString());
                 Entity entity = EntityType.loadEntityRecursive(data, level, new EntitySpawnRequest(EntitySpawnReason.SPAWNER, false), EntityProcessor.NOP);
                 if (entity == null) return;
                 entity.getPersistentData().putBoolean("apoth.no_pinata", true);
-                for (int i = 0; i < this.rolls; i++) {
-                    entity.snapTo(summoner.getX(), summoner.getY(), summoner.getZ(), 0, 0);
-                    DamageSource src = new DamageSource(level.registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE).getOrThrow(DamageTypes.GENERIC_KILL), summoner);
-                    entity.hurtServer(level, src, 1);
-                    entity.captureDrops(items);
-                    DROP_LOOT.invoke(entity, level, level.damageSources().playerAttack(summoner), true);
+                if (entity instanceof LivingEntity living) {
+                    Optional<ResourceKey<LootTable>> table = living.getLootTable();
+                    for (int i = 0; i < this.rolls && table.isPresent(); i++) {
+                        living.snapTo(summoner.getX(), summoner.getY(), summoner.getZ(), 0, 0);
+                        DamageSource src = new DamageSource(level.registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE).getOrThrow(DamageTypes.GENERIC_KILL), summoner);
+                        living.hurtServer(level, src, 1);
+                        // The five-arg overload hands the loot to a consumer instead of the world, which is
+                        // exactly what this reward wants. It replaces a reflected call to the protected
+                        // three-arg version wrapped in NeoForge's captureDrops -- an added field, so no
+                        // access widener could have reached it. Vanilla just offers the seam directly.
+                        living.dropFromLootTable(level, level.damageSources().playerAttack(summoner), true, table.get(), list);
+                    }
                 }
                 entity.remove(RemovalReason.DISCARDED);
-
-                items.stream().map(ItemEntity::getItem).forEach(list);
             }
             catch (Throwable e) {
                 e.printStackTrace();

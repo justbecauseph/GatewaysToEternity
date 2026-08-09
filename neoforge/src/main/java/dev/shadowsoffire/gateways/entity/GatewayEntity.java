@@ -67,7 +67,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
-import net.neoforged.neoforge.network.PacketDistributor;
+import dev.shadowsoffire.placebo.network.PayloadSender;
 
 public abstract class GatewayEntity extends Entity implements IEntityWithComplexSpawn {
 
@@ -534,7 +534,7 @@ public abstract class GatewayEntity extends Entity implements IEntityWithComplex
     }
 
     public void spawnParticle(double x, double y, double z, ParticlePayload.EffectType type) {
-        PacketDistributor.sendToPlayersTrackingChunk((ServerLevel) this.level(), this.chunkPosition(), new ParticlePayload(this, x, y, z, this.getGateway().color(), type));
+        PayloadSender.toPlayersTrackingChunk((ServerLevel) this.level(), this.chunkPosition(), new ParticlePayload(this, x, y, z, this.getGateway().color(), type));
     }
 
     public void spawnItem(ItemStack stack) {

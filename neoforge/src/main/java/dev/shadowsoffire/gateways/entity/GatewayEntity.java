@@ -18,7 +18,7 @@ import dev.shadowsoffire.gateways.GatewayObjects;
 import dev.shadowsoffire.gateways.Gateways;
 import dev.shadowsoffire.gateways.client.GatewayTickableSound;
 import dev.shadowsoffire.gateways.client.ParticleHandler;
-import dev.shadowsoffire.gateways.event.GateEvent;
+import dev.shadowsoffire.gateways.event.GateEvents;
 import dev.shadowsoffire.gateways.gate.GateRules;
 import dev.shadowsoffire.gateways.gate.Gateway;
 import dev.shadowsoffire.gateways.gate.GatewayRegistry;
@@ -63,7 +63,6 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
@@ -234,7 +233,7 @@ public abstract class GatewayEntity extends Entity implements IEntityWithComplex
             if (this.isWaveActive()) {
                 if (enemies.isEmpty()) {
                     this.completeWave();
-                    NeoForge.EVENT_BUS.post(new GateEvent.WaveEnd(this));
+                    GateEvents.WAVE_END.invoker().accept(this);
                     this.currentWaveEntities.clear();
                     this.entityData.set(WAVE_ACTIVE, false);
                     this.entityData.set(TICKS_ACTIVE, 0);
@@ -247,7 +246,7 @@ public abstract class GatewayEntity extends Entity implements IEntityWithComplex
                     this.entityData.set(WAVE_ACTIVE, true);
                     this.entityData.set(TICKS_ACTIVE, 0);
                     this.entityData.set(ENEMIES, this.currentWaveEntities.size());
-                    NeoForge.EVENT_BUS.post(new GateEvent.WaveStarted(this));
+                    GateEvents.WAVE_STARTED.invoker().accept(this);
                     return;
                 }
                 else if (this.isCompleted()) {
@@ -301,12 +300,12 @@ public abstract class GatewayEntity extends Entity implements IEntityWithComplex
                 GatewayObjects.FINISH_GATEWAY.trigger(sp, this.getGateway());
             }
         });
-        NeoForge.EVENT_BUS.post(new GateEvent.Completed(this));
+        GateEvents.COMPLETED.invoker().accept(this);
     }
 
     public void onGateCreated() {
         this.playSound(GatewayObjects.GATE_START.get(), 1, 1);
-        NeoForge.EVENT_BUS.post(new GateEvent.Opened(this));
+        GateEvents.OPENED.invoker().accept(this);
     }
 
     /**
@@ -346,7 +345,7 @@ public abstract class GatewayEntity extends Entity implements IEntityWithComplex
      */
     public void onFailure(Collection<LivingEntity> remaining, FailureReason reason) {
         this.failureReason = reason;
-        NeoForge.EVENT_BUS.post(new GateEvent.Failed(this));
+        GateEvents.FAILED.invoker().accept(this);
         Player player = this.summonerOrClosest();
         if (player != null) player.sendSystemMessage(reason.getMsg());
         spawnLightningOn(this, false);

@@ -15,7 +15,7 @@ import dev.shadowsoffire.gateways.Gateways;
 import dev.shadowsoffire.gateways.GatewaysNeoForge;
 import dev.shadowsoffire.gateways.entity.GatewayEntity;
 import dev.shadowsoffire.gateways.entity.GatewayEntity.FailureReason;
-import dev.shadowsoffire.gateways.event.GateEvent;
+import dev.shadowsoffire.gateways.event.GateEvents;
 import dev.shadowsoffire.gateways.payloads.ParticlePayload;
 import net.minecraft.core.Holder;
 import net.minecraft.core.UUIDUtil;
@@ -36,7 +36,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.event.EventHooks;
 
@@ -154,7 +153,7 @@ public record Wave(List<WaveEntity> entities, List<WaveModifier> modifiers, List
             }
         }
 
-        NeoForge.EVENT_BUS.post(new GateEvent.WaveEntitySpawned(gate, entity));
+        GateEvents.WAVE_ENTITY_SPAWNED.invoker().accept(gate, entity);
         level.addFreshEntityWithPassengers(entity);
         level.playSound(null, gate.getX(), gate.getY(), gate.getZ(), GatewayObjects.GATE_WARP.asHolder(), SoundSource.HOSTILE, 0.5F, 1);
         gate.spawnParticle(entity.getX(), entity.getY(), entity.getZ(), ParticlePayload.EffectType.SPAWNED);

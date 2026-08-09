@@ -18,7 +18,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.util.ByIdMap;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+import dev.shadowsoffire.placebo.network.PayloadContext;
 
 public record ParticlePayload(int gateId, double x, double y, double z, int color, EffectType effectType) implements CustomPacketPayload {
 
@@ -54,7 +54,7 @@ public record ParticlePayload(int gateId, double x, double y, double z, int colo
         }
 
         @Override
-        public void handleClient(ParticlePayload msg, IPayloadContext ctx) {
+        public void handleClient(ParticlePayload msg, PayloadContext ctx) {
             ParticleHandler.handle(msg);
         }
 

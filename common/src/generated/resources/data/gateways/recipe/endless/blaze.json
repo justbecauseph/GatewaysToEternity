@@ -4,10 +4,12 @@
     "key": {
         "A": {
             "neoforge:ingredient_type": "neoforge:components",
+            "fabric:type": "fabric:components",
             "components": {
                 "gateways:gateway": "gateways:basic/blaze"
             },
-            "items": "gateways:gate_pearl"
+            "items": "gateways:gate_pearl",
+            "base": "gateways:gate_pearl"
         },
         "G": "#c:gems/emerald",
         "M": "minecraft:magma_cream",

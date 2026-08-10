@@ -5,10 +5,12 @@
         "A": "minecraft:anvil",
         "G": {
             "neoforge:ingredient_type": "neoforge:components",
+            "fabric:type": "fabric:components",
             "components": {
                 "gateways:gateway": "gateways:iron_automaton"
             },
-            "items": "gateways:gate_pearl"
+            "items": "gateways:gate_pearl",
+            "base": "gateways:gate_pearl"
         },
         "I": "#c:ingots/iron",
         "P": "minecraft:piston",

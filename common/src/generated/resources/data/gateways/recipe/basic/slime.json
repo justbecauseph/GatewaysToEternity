@@ -7,31 +7,37 @@
         "E": "#c:ender_pearls",
         "O": {
             "neoforge:ingredient_type": "neoforge:components",
+            "fabric:type": "fabric:components",
             "components": {
                 "minecraft:potion_contents": {
                     "potion": "minecraft:water"
                 }
             },
-            "items": "minecraft:potion"
+            "items": "minecraft:potion",
+            "base": "minecraft:potion"
         },
         "P": {
             "neoforge:ingredient_type": "neoforge:components",
+            "fabric:type": "fabric:components",
             "components": {
                 "minecraft:potion_contents": {
                     "potion": "minecraft:water"
                 }
             },
-            "items": "minecraft:potion"
+            "items": "minecraft:potion",
+            "base": "minecraft:potion"
         },
         "R": "minecraft:red_mushroom",
         "T": {
             "neoforge:ingredient_type": "neoforge:components",
+            "fabric:type": "fabric:components",
             "components": {
                 "minecraft:potion_contents": {
                     "potion": "minecraft:water"
                 }
             },
-            "items": "minecraft:potion"
+            "items": "minecraft:potion",
+            "base": "minecraft:potion"
         }
     },
     "pattern": [

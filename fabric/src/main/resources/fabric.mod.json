@@ -8,9 +8,13 @@
   "license": "LGPL-3.0-only",
   "environment": "*",
   "entrypoints": {
-    "main": [ "dev.shadowsoffire.gateways.GatewaysFabric" ]
+    "main": [ "dev.shadowsoffire.gateways.GatewaysFabric" ],
+    "client": [ "dev.shadowsoffire.gateways.client.GatewaysFabricClient" ]
   },
   "accessWidener": "gateways.accesswidener",
+  "mixins": [
+    "gateways-fabric.mixins.json"
+  ],
   "depends": {
     "fabricloader": ">=0.19.3",
     "fabric-api": "*",

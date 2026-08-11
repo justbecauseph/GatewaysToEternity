@@ -7,6 +7,7 @@ import dev.shadowsoffire.gateways.data.GatewayProvider;
 import dev.shadowsoffire.gateways.data.GatewayRecipeProvider;
 import dev.shadowsoffire.gateways.data.GearSetProvider;
 import dev.shadowsoffire.gateways.entity.GatewayEntity;
+import dev.shadowsoffire.gateways.event.GatewayCommonEvents;
 import dev.shadowsoffire.gateways.gate.Failure;
 import dev.shadowsoffire.gateways.gate.GatewayRegistry;
 import dev.shadowsoffire.gateways.gate.Reward;
@@ -40,7 +41,7 @@ public class GatewaysNeoForge {
         bus.register(this);
         PayloadHelper.registerPayload(new ParticlePayload.Provider());
         NeoForge.EVENT_BUS.register(new GatewayEvents());
-        GatewayEvents.registerCommonHandlers();
+        GatewayCommonEvents.register();
         GatewayObjects.bootstrap();
         WaveModifier.initCodecs();
         Reward.initCodecs();

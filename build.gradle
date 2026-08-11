@@ -90,6 +90,13 @@ allprojects {
             }
         }
         maven {
+            // Fabric builds of optional integrations such as Jade.
+            url "https://api.modrinth.com/maven"
+            content {
+                includeGroup "maven.modrinth"
+            }
+        }
+        maven {
             // Shadows
             url "https://maven.shadowsoffire.dev/releases"
             content {

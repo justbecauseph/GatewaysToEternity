@@ -1,0 +1,16 @@
+{
+    "required": true,
+    "package": "dev.shadowsoffire.gateways.mixin",
+    "compatibilityLevel": "JAVA_25",
+    "injectors": {
+        "defaultRequire": 1
+    },
+    "mixins": [
+        "SpawnerBlockEntityMixin"
+    ],
+    "client": [
+        "client.ItemTintSourcesAccessor",
+        "client.SelectItemModelPropertiesAccessor"
+    ],
+    "minVersion": "0.8"
+}

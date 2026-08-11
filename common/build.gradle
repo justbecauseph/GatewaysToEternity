@@ -19,6 +19,11 @@ dependencies {
     api "dev.shadowsoffire:Placebo:${rootProject.mcVersion}-${rootProject.placeboVersion}"
     api "dev.shadowsoffire:ApothicAttributes:${rootProject.mcVersion}-${rootProject.attributeslibVersion}"
 
+    // JEI and Jade expose loader-neutral API packages. Their annotated plugins live in common so
+    // both platform jars discover the same optional integration without bundling either mod.
+    compileOnly("mezz.jei:jei-${rootProject.mcVersion}-common-api:${rootProject.jeiVersion}") { transitive = false }
+    compileOnly("maven.modrinth:jade:${rootProject.jadeVersion}+fabric") { transitive = false }
+
     // javax.annotation.Nullable came transitively from the NeoForge dependency in the old
     // single-project build. Common has no NeoForge on its classpath, so it must be declared.
     compileOnly "com.google.code.findbugs:jsr305:3.0.2"

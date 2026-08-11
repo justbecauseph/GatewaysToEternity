@@ -17,6 +17,9 @@ configurations {
     compileClasspath.extendsFrom common
     runtimeClasspath.extendsFrom common
     developmentFabric.extendsFrom common
+
+    localRuntime
+    runtimeClasspath.extendsFrom localRuntime
 }
 
 dependencies {
@@ -26,10 +29,17 @@ dependencies {
 
     api "dev.architectury:architectury-fabric:${rootProject.architecturyVersion}"
 
-    // Placebo ships one shadowed jar per loader; the Fabric build needs the Fabric one, which is not
-    // published, so this consumes the sibling project's output directly for now.
-    api "dev.shadowsoffire:Placebo:${rootProject.mcVersion}-${rootProject.placeboVersion}"
-    api "dev.shadowsoffire:ApothicAttributes:${rootProject.mcVersion}-${rootProject.attributeslibVersion}"
+    // Both dependencies ship one shadowed jar per loader. Use their sibling Fabric outputs for
+    // compilation and development runtime so Loom never resolves a NeoForge platform copy.
+    def placeboFabricJar = files("${rootProject.projectDir}/../Placebo/fabric/build/libs/Placebo-${rootProject.mcVersion}-${rootProject.placeboVersion}.jar")
+    def attributesFabricJar = files("${rootProject.projectDir}/../Apothic-Attributes/fabric/build/libs/ApothicAttributes-${rootProject.mcVersion}-${rootProject.attributeslibVersion}.jar")
+    compileOnly placeboFabricJar
+    runtimeOnly placeboFabricJar
+    compileOnly attributesFabricJar
+    runtimeOnly attributesFabricJar
+
+    if (rootProject.hasProperty('jeiVersion'))  localRuntime "mezz.jei:jei-${rootProject.mcVersion}-fabric:${rootProject.jeiVersion}"
+    if (rootProject.hasProperty('jadeVersion')) localRuntime "maven.modrinth:jade:${rootProject.jadeVersion}+fabric"
 
     // loom-no-remap: :common has no namedElements variant -- nothing is mapped, so depend on the plain project.
     common(project(path: ":common")) { transitive false }
@@ -59,6 +69,7 @@ sourcesJar {
     def commonSources = project(":common").tasks.named("sourcesJar")
     dependsOn commonSources
     from commonSources.map { zipTree(it.archiveFile) }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 processResources {
@@ -68,6 +79,63 @@ processResources {
             "desc": rootProject.desc, "author": rootProject.author, "javaVersion": rootProject.javaVersion,
             "mcVersion": rootProject.mcVersion, "fabricLoaderVersion": rootProject.fabricLoaderVersion
     }
+}
+
+// ---------------------------------------------------------------------------
+// Mixin config generation.
+// ---------------------------------------------------------------------------
+var generateFabricMixinConfig = tasks.register("generateFabricMixinConfig", ProcessResources) {
+    inputs.dir('src/templates')
+
+    def mixinRoots = [
+        file("${project(':common').projectDir}/src/main/java/dev/shadowsoffire/${rootProject.modid}/mixin"),
+        file("${project.projectDir}/src/main/java/dev/shadowsoffire/${rootProject.modid}/mixin")
+    ].findAll { it.exists() }
+
+    mixinRoots.each { inputs.dir(it) }
+
+    def replaceProperties = [
+        modGroup   : rootProject.modGroup,
+        modid      : rootProject.modid,
+        javaVersion: rootProject.javaVersion
+    ]
+    inputs.properties replaceProperties
+
+    from("src/templates")
+    into("src/generated/resources")
+
+    filesMatching('mixins.json') {
+        def mixinFiles = []
+        def clientMixinFiles = []
+
+        mixinRoots.each { root ->
+            fileTree(root).visit { FileVisitDetails details ->
+                def name = details.file.path.replace(File.separator, '/')
+                name = name.substring(name.indexOf('mixin/') + 'mixin/'.length())
+                if (name.endsWith('.java')) {
+                    name = name.substring(0, name.length() - '.java'.length()).replaceAll('/', '.')
+                    (name.startsWith('client') ? clientMixinFiles : mixinFiles).add(name)
+                }
+            }
+        }
+
+        replaceProperties.put('mixins', mixinFiles.sort().collect { '        "' + it + '"' }.join(',\n'))
+        replaceProperties.put('clientMixins', clientMixinFiles.sort().collect { '        "' + it + '"' }.join(',\n'))
+
+        expand replaceProperties
+        name "${rootProject.modid}-fabric.mixins.json".toString()
+    }
+}
+
+tasks.named('processResources') { dependsOn generateFabricMixinConfig }
+tasks.withType(Jar).configureEach { dependsOn generateFabricMixinConfig }
+
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+    // Production receives common resources through the shadow jar; development launches use this
+    // source set directly and need the access widener, assets and generated data here as well.
+    srcDir project(":common").file("src/main/resources")
+    srcDir project(":common").file("src/generated/resources")
 }
 
 if (!rootProject.enableTests.toBoolean()) {

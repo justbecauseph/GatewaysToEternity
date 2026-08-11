@@ -6,6 +6,7 @@ import dev.architectury.hooks.level.entity.PlayerHooks;
 import dev.shadowsoffire.gateways.command.GatewayCommand;
 import dev.shadowsoffire.gateways.entity.GatewayEntity;
 import dev.shadowsoffire.placebo.events.PlaceboEvents.DespawnResult;
+import dev.shadowsoffire.placebo.events.PlaceboEvents.FinalizeSpawnContext;
 import dev.shadowsoffire.placebo.events.PlaceboEvents.MobDespawnContext;
 import dev.shadowsoffire.placebo.events.PlaceboEvents;
 import net.minecraft.world.entity.Entity;
@@ -14,7 +15,6 @@ import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityTeleportEvent;
-import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
 import net.neoforged.neoforge.event.entity.living.LivingConversionEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
@@ -30,6 +30,8 @@ public class GatewayEvents {
      */
     public static void registerCommonHandlers() {
         PlaceboEvents.MOB_DESPAWN.register(dev.architectury.event.EventPriority.LOWEST, GatewayEvents::despawn);
+        // LOWEST as before: this undoes a spawn cancellation, so it has to run after whoever set it.
+        PlaceboEvents.FINALIZE_SPAWN.register(dev.architectury.event.EventPriority.LOWEST, GatewayEvents::spawn);
     }
 
     @SubscribeEvent
@@ -89,8 +91,7 @@ public class GatewayEvents {
      * This might have unintended side effects if other mods are cancelling spawns for important reasons, but there is no good way to track this otherwise.
      * The effect of a spawn truly being cancelled is that the gateway implodes, which is terrible player experience.
      */
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void spawn(FinalizeSpawnEvent e) {
+    private static void spawn(FinalizeSpawnContext e) {
         Entity entity = e.getEntity();
         GatewayEntity gate = GatewayEntity.getOwner(entity);
         if (gate != null && e.isSpawnCancelled()) {

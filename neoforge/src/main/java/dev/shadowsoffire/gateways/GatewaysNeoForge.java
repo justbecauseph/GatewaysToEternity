@@ -42,6 +42,7 @@ public class GatewaysNeoForge {
         PayloadHelper.registerPayload(new ParticlePayload.Provider());
         NeoForge.EVENT_BUS.register(new GatewayEvents());
         GatewayCommonEvents.register();
+        GatewayIncomingDamageEvents.registerCommonHandlers();
         GatewayObjects.bootstrap();
         WaveModifier.initCodecs();
         Reward.initCodecs();

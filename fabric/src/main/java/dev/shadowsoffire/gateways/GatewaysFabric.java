@@ -36,6 +36,7 @@ public class GatewaysFabric implements ModInitializer {
         Failure.initCodecs();
         ApplicationMode.initCodecs();
         GatewayCommonEvents.register();
+        GatewayIncomingDamageEvents.registerCommonHandlers();
         GatewayRegistry.INSTANCE.registerToBus();
         PayloadHelper.registerPayload(new ParticlePayload.Provider());
         TabFillingRegistry.register(GatewayObjects.TAB.getKey(), GatewayObjects.GATE_PEARL);

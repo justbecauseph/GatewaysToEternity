@@ -2,22 +2,11 @@ package dev.shadowsoffire.gateways.client;
 
 import javax.annotation.Nullable;
 
-import org.joml.Matrix3x2fStack;
-
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-
 import dev.shadowsoffire.gateways.GatewayObjects;
 import dev.shadowsoffire.gateways.Gateways;
 import dev.shadowsoffire.gateways.entity.GatewayEntity;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.Rect2i;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.BossEvent;
-import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -32,7 +21,6 @@ import net.neoforged.neoforge.common.NeoForge;
 
 @EventBusSubscriber(value = Dist.CLIENT, modid = Gateways.MODID)
 public class GatewaysClient {
-
 
     @Nullable
     public static Rect2i bossBarRect = null;
@@ -66,20 +54,21 @@ public class GatewaysClient {
 
     public static void renderPre(RenderFrameEvent.Pre event) {
         bossBarRect = null;
+        GatewayBossBarState.reset();
     }
 
     public static void bossRenderPre(CustomizeGuiOverlayEvent.BossEventProgress event) {
         BossEvent boss = event.getBossEvent();
-        String name = boss.getName().getString();
-        if (name.startsWith("GATEWAY_ID")) {
-            Level level = Minecraft.getInstance().level;
+        if (GatewayBossBarState.isGateway(boss)) {
             event.setCanceled(true);
-            if (level.getEntity(Integer.valueOf(name.substring(10))) instanceof GatewayEntity gate && gate.isValid()) {
+            GatewayEntity gate = GatewayBossBarState.resolve(boss);
+            if (gate != null && gate.isValid()) {
                 gate.getGateway().renderBossBar(gate, event.getGuiGraphics(), event.getX(), event.getY(), false);
                 event.setIncrement(event.getIncrement() * 2);
             }
         }
         bossBarRect = new Rect2i(event.getX(), 0, 200, event.getY() + event.getIncrement());
+        GatewayBossBarState.recordBounds(event.getX(), event.getY() + event.getIncrement());
     }
 
 

@@ -9,6 +9,7 @@
         "SpawnerBlockEntityMixin"
     ],
     "client": [
+        "client.BossHealthOverlayMixin",
         "client.ItemTintSourcesAccessor",
         "client.SelectItemModelPropertiesAccessor"
     ],

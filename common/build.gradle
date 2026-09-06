@@ -13,10 +13,15 @@ dependencies {
 
     api "dev.architectury:architectury:${rootProject.architecturyVersion}"
 
-    // Placebo publishes one shadowed jar holding both its common and platform classes. Compiling
-    // against it here is fine -- javac resolves only what is referenced, and reaching for anything
-    // platform-side fails loudly rather than silently.
-    api "dev.shadowsoffire:Placebo:${rootProject.mcVersion}-${rootProject.placeboVersion}"
+    // Use the sibling Fabric artifact when it is available so common compilation sees the same
+    // API that the Fabric project and runtime use. Keep the published coordinate as a fallback
+    // for standalone checkouts that do not have the sibling artifact yet.
+    def placeboFabricJar = file("${rootProject.projectDir}/../Placebo/fabric/build/libs/Placebo-${rootProject.mcVersion}-${rootProject.placeboVersion}.jar")
+    if (placeboFabricJar.exists()) {
+        api files(placeboFabricJar)
+    } else {
+        api "dev.shadowsoffire:Placebo:${rootProject.mcVersion}-${rootProject.placeboVersion}"
+    }
     api "dev.shadowsoffire:ApothicAttributes:${rootProject.mcVersion}-${rootProject.attributeslibVersion}"
 
     // JEI and Jade expose loader-neutral API packages. Their annotated plugins live in common so

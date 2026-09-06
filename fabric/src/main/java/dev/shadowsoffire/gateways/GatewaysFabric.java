@@ -1,5 +1,6 @@
 package dev.shadowsoffire.gateways;
 
+import dev.architectury.event.EventPriority;
 import dev.shadowsoffire.gateways.event.GatewayCommonEvents;
 import dev.shadowsoffire.gateways.gate.Failure;
 import dev.shadowsoffire.gateways.gate.GatewayRegistry;
@@ -9,7 +10,9 @@ import dev.shadowsoffire.gateways.gate.WaveModifier;
 import dev.shadowsoffire.gateways.gate.endless.ApplicationMode;
 import dev.shadowsoffire.gateways.payloads.ParticlePayload;
 import dev.shadowsoffire.placebo.dynreg.FabricDynReg;
+import dev.shadowsoffire.placebo.events.FabricDropDispatcher;
 import dev.shadowsoffire.placebo.network.PayloadHelper;
+import dev.shadowsoffire.placebo.PlaceboFabric;
 import dev.shadowsoffire.placebo.registry.DeferredHelper;
 import dev.shadowsoffire.placebo.registry.FabricRegistryFactory;
 import dev.shadowsoffire.placebo.tabs.TabFillingRegistry;
@@ -27,6 +30,7 @@ public class GatewaysFabric implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        PlaceboFabric.bootstrap();
         DeferredHelper.setRegistryFactory(new FabricRegistryFactory());
         FabricDynReg.rebindRuntimeHooks();
         GatewayObjects.bootstrap();
@@ -36,7 +40,8 @@ public class GatewaysFabric implements ModInitializer {
         Failure.initCodecs();
         ApplicationMode.initCodecs();
         GatewayCommonEvents.register();
-        GatewayIncomingDamageEvents.registerCommonHandlers();
+        FabricDropDispatcher.registerDespawn(EventPriority.LOWEST, GatewayCommonEvents::despawn);
+        FabricGatewayIncomingDamageEvents.register();
         GatewayRegistry.INSTANCE.registerToBus();
         PayloadHelper.registerPayload(new ParticlePayload.Provider());
         TabFillingRegistry.register(GatewayObjects.TAB.getKey(), GatewayObjects.GATE_PEARL);

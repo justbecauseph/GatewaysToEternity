@@ -31,6 +31,7 @@ import dev.shadowsoffire.placebo.dynreg.DynamicHolder;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.UUIDUtil;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -674,7 +675,9 @@ public abstract class GatewayEntity extends Entity implements EntitySpawnExtensi
 
     @Nullable
     public static GatewayEntity getOwner(Entity entity) {
-        return PersistentData.of(entity).read("gateways.owner", UUIDUtil.CODEC).map(id -> {
+        CompoundTag data = PersistentData.peek(entity);
+        if (data == null) return null;
+        return data.read("gateways.owner", UUIDUtil.CODEC).map(id -> {
             if (entity.level() instanceof ServerLevel sl && sl.getEntity(id) instanceof GatewayEntity gate && gate.isValid()) {
                 return gate;
             }

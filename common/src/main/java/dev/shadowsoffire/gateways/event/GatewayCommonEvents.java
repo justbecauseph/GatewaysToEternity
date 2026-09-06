@@ -8,6 +8,8 @@ import dev.shadowsoffire.placebo.events.PlaceboEvents.DespawnResult;
 import dev.shadowsoffire.placebo.events.PlaceboEvents.FinalizeSpawnContext;
 import dev.shadowsoffire.placebo.events.PlaceboEvents.MobDespawnContext;
 import dev.shadowsoffire.placebo.events.PlaceboEvents.EntityTeleportContext;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.ServerLevelAccessor;
 
 /** Loader-neutral handlers backed by Placebo's cross-loader event surface. */
 public final class GatewayCommonEvents {
@@ -16,16 +18,19 @@ public final class GatewayCommonEvents {
 
     public static void register() {
         // Last-writer-wins: gateway-owned mobs must remain non-despawning after other handlers run.
-        PlaceboEvents.MOB_DESPAWN.register(EventPriority.LOWEST, GatewayCommonEvents::despawn);
+        PlaceboEvents.registerMobDespawnInternal(EventPriority.LOWEST, GatewayCommonEvents::despawn);
         // This deliberately undoes spawn cancellation, so retain the original LOWEST priority.
         PlaceboEvents.FINALIZE_SPAWN.register(EventPriority.LOWEST, GatewayCommonEvents::spawn);
         PlaceboEvents.ENTITY_TELEPORT.register(GatewayCommonEvents::teleport);
     }
 
     private static void despawn(MobDespawnContext event) {
-        if (GatewayEntity.getOwner(event.getEntity()) != null) {
-            event.setResult(DespawnResult.DENY);
-        }
+        event.setResult(despawn(event.getEntity(), event.getLevel(), event.getResult()));
+    }
+
+    /** Direct Fabric despawn handler; preserve the carried result for last-writer-wins priority ordering. */
+    public static DespawnResult despawn(Mob mob, ServerLevelAccessor level, DespawnResult current) {
+        return GatewayEntity.getOwner(mob) != null ? DespawnResult.DENY : current;
     }
 
     private static void spawn(FinalizeSpawnContext event) {

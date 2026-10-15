@@ -1,3 +1,11 @@
+## 7.0.2
+* Added a party health floor for wave entities. Waves are authored as the three-player version of the encounter.
+  * When a wave entity spawns, its max health is multiplied by `max(3, n) / 3`, capped at `5 / 3`, where `n` is the number of players within 64 blocks of the gateway that are alive and not spectating.
+  * One to three players face the wave as authored; four players face 4/3 of its health, and five or more face 5/3.
+  * Applies to normal and endless gateways, and to living passengers. The multiplier is a separate `ADD_MULTIPLIED_TOTAL` max health modifier with the id `gateways:party_health_floor`; other wave modifiers are unchanged.
+* Added Fabric GameTests (`:fabric:runGameTest`, run by `build`).
+* Requires Placebo 11.0.1 and Apothic Attributes 4.0.1, the minimums since 7.0.1. The generated NeoForge metadata now states them too.
+
 ## 7.0.0
 * Ported to Minecraft 26.2.
 * Updated to Placebo 11.0.0 and Apothic Attributes 4.0.0.

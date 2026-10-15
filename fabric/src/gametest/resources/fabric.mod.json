@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "gateways-gametest",
+  "version": "1.0.0",
+  "name": "Gateways to Eternity Game Tests",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-gametest": [
+      "dev.shadowsoffire.gateways.gametest.PartyHealthFloorGameTests"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "fabric-api": "*",
+    "minecraft": "~26.2",
+    "gateways": "*"
+  }
+}

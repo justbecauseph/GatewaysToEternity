@@ -24,6 +24,11 @@ This object references the following objects:
 }
 ```
 
+# Party Health Floor
+Waves are authored as the three-player version of the encounter. When a wave entity spawns, its max health is multiplied by `max(3, n) / 3`, capped at `5 / 3`, where `n` is the number of players within 64 blocks of the gateway that are alive and not spectating. One to three players face the wave as authored; four players face 4/3 of its health, and five or more face 5/3.
+
+The multiplier is applied after the wave's `modifiers` and before the entity's health is filled, as a separate `add_multiplied_total` max health modifier with the id `gateways:party_health_floor` (added only when the multiplier is above 1). Because it multiplies the total, it also scales max health added later, such as by endless gateway modifiers. It applies to living passengers, and to normal and endless gateways. Players are counted once per entity, when that entity spawns. The result is still clamped to the max health attribute's range (1024 in vanilla, unless a mod such as AttributeFix raises it).
+
 # Examples
 A simple wave spawning two blazes and providing the loot of three when completed.
 ```json

@@ -11,6 +11,29 @@ architectury {
     fabric()
 }
 
+// Headless GameTests in their own source set and mod (src/gametest), so they never ship in the mod jar.
+// Loom adds runGameTest and makes check depend on it, so build runs them.
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = 'gateways-gametest'
+        enableGameTests = true
+        enableClientGameTests = false
+        eula = true
+    }
+}
+
+// The Placebo and Apothic Attributes jars on the runtime classpath ship their own GameTests. Run only this mod's, so
+// their mock players never share a batch with the player-counting tests here.
+def gameTestReportFile = layout.buildDirectory.file('test-results/gameTest/TEST-gateways-gametest.xml')
+tasks.named('runGameTest') {
+    systemProperty 'fabric-api.gametest.filter', 'gateways-gametest:*'
+    systemProperty 'fabric-api.gametest.report-file', gameTestReportFile.get().asFile.absolutePath
+    doFirst {
+        gameTestReportFile.get().asFile.parentFile.mkdirs()
+    }
+}
+
 configurations {
     common
     shadowCommon

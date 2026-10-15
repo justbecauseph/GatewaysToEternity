@@ -93,6 +93,9 @@ public record Wave(List<WaveEntity> entities, List<WaveModifier> modifiers, List
 
     /**
      * Attempts to spawn a wave entity, placing it in the world and processing all usual triggers.
+     * <p>
+     * The entity and its living passengers receive the {@linkplain PartyHealthFloor party health floor} for the players near
+     * {@code pos} at the time of the spawn.
      * 
      * @param level      The level the gateway is in.
      * @param pos        The position of the gateway.
@@ -118,8 +121,10 @@ public record Wave(List<WaveEntity> entities, List<WaveModifier> modifiers, List
         PersistentData.of(entity).store("gateways.owner", UUIDUtil.CODEC, gate.getUUID());
         entity.snapTo(spawnPos.x(), spawnPos.y(), spawnPos.z(), level.getRandom().nextFloat() * 360, level.getRandom().nextFloat() * 360);
 
+        double partyFactor = PartyHealthFloor.factor(PartyHealthFloor.countPlayers(level, pos));
         entity.getPassengersAndSelf().filter(e -> e instanceof LivingEntity).map(LivingEntity.class::cast).forEach(e -> {
             wave.modifiers.forEach(m -> m.apply(e, gate));
+            PartyHealthFloor.apply(e, partyFactor);
             e.setHealth(e.getMaxHealth());
             e.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 5, 100, true, false));
         });

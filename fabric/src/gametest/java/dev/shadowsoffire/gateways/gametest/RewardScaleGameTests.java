@@ -185,6 +185,24 @@ public final class RewardScaleGameTests {
         StackReward stack = new StackReward(stack(Items.DIAMOND, 16));
         helper.assertValueEqual(total(generate(helper, new ChancedReward(stack, 1F), 2)), 32, "diamonds from a certain chanced reward at scale 2");
         helper.assertValueEqual(total(generate(helper, new ChancedReward(stack, 0F), 2)), 0, "diamonds from an impossible chanced reward at scale 2");
+
+        // Chances of 1 and 0 survive a clamped chance * scale, so check a chance in between. At scale 3 a 25% reward must still
+        // hit about 25% of the time, not 75%, and each hit must pay the whole scaled reward, not one roll per unit of scale.
+        ChancedReward quarter = new ChancedReward(new StackReward(stack(Items.DIAMOND, 1)), 0.25F);
+        GatewayEntity gate = gate(helper);
+        ServerPlayer summoner = summoner(helper);
+        int trials = 2000;
+        int hits = 0;
+        for (int i = 0; i < trials; i++) {
+            List<ItemStack> items = new ArrayList<>();
+            quarter.generateLoot(helper.getLevel(), gate, summoner, items::add, 3);
+            int diamonds = total(items);
+            helper.assertTrue(diamonds == 0 || diamonds == 3, "a 25% chanced 1-diamond reward at scale 3 paid " + diamonds + " diamonds");
+            if (diamonds > 0) hits++;
+        }
+        // The hit count is binomial(2000, 0.25), whose standard deviation is about 0.0097 of the trials, so 0.05 is over 5 deviations.
+        double hitRate = (double) hits / trials;
+        helper.assertTrue(Math.abs(hitRate - 0.25D) < 0.05D, "hit rate of a 25% chanced reward at scale 3 over " + trials + " trials was " + hitRate);
         helper.succeed();
     }
 

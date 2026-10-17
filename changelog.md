@@ -1,3 +1,9 @@
+## 7.0.3
+* Summon failures now fire `GateEvents.FAILURE_ENTITY_SPAWNED` for each summoned entity, just before it and its passengers join the level, so listeners can record state that entity-add processing reads.
+  * Failure summons do not fire `WAVE_ENTITY_SPAWNED`: they are not wave members, and are summoned while the gateway fails.
+* Summon failures now add the summoned entity's passengers to the level, placed on their vehicle. Previously only the entity itself joined the level.
+* Corrected the documentation of `GateEvents.WAVE_ENTITY_SPAWNED`: it fires just before the entity and its passengers are added to the level, not after.
+
 ## 7.0.2
 * Added a party health floor for wave entities. Waves are authored as the three-player version of the encounter.
   * When a wave entity spawns, its max health is multiplied by `max(3, n) / 3`, capped at `5 / 3`, where `n` is the number of players within 64 blocks of the gateway that are alive and not spectating.

@@ -35,7 +35,7 @@ Applies an effect instance to all nearby players.
 ```
 
 ## Summon Failure
-Summons a wave entity using the spawn algorithm of the Gateway.
+Summons a wave entity using the spawn algorithm of the Gateway. Passengers the entity carries, from its NBT or its modifiers, are summoned riding it.
 
 ### Schema
 ```js

@@ -9,6 +9,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.shadowsoffire.gateways.Gateways;
 import dev.shadowsoffire.gateways.entity.GatewayEntity;
 import dev.shadowsoffire.gateways.entity.GatewayEntity.FailureReason;
+import dev.shadowsoffire.gateways.event.GateEvents;
 import dev.shadowsoffire.placebo.codec.CodecMap;
 import dev.shadowsoffire.placebo.codec.CodecProvider;
 import net.minecraft.core.Holder;
@@ -19,7 +20,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffectUtil;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item.TooltipContext;
@@ -132,6 +133,8 @@ public interface Failure extends CodecProvider<Failure> {
 
     /**
      * Summons a {@link WaveEntity} as a failure penalty.
+     * <p>
+     * Each summoned entity fires {@link GateEvents#FAILURE_ENTITY_SPAWNED}, then joins the level with its passengers.
      */
     public static record SummonFailure(WaveEntity entity) implements Failure {
 
@@ -143,11 +146,14 @@ public interface Failure extends CodecProvider<Failure> {
         @Override
         public void onFailure(ServerLevel level, GatewayEntity gate, Player summoner, FailureReason reason) {
             for (int i = 0; i < entity.getCount(); i++) {
-                Entity ent = entity.createEntity(level, gate);
+                LivingEntity ent = entity.createEntity(level, gate);
                 if (ent != null) {
                     Vec3 pos = gate.getGateway().spawnAlgo().spawn(level, gate.position(), gate, ent);
                     ent.setPos(pos != null ? pos : gate.position());
-                    level.addFreshEntity(ent);
+                    // Passengers stay where they were loaded (usually 0, 0, 0) until they ride-tick, and a passenger only ride-ticks while its own chunk ticks.
+                    ent.getIndirectPassengers().forEach(p -> p.getVehicle().positionRider(p));
+                    GateEvents.FAILURE_ENTITY_SPAWNED.invoker().accept(gate, ent);
+                    level.addFreshEntityWithPassengers(ent);
                 }
             }
         }

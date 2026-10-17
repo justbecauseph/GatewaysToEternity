@@ -6,7 +6,8 @@
   "environment": "*",
   "entrypoints": {
     "fabric-gametest": [
-      "dev.shadowsoffire.gateways.gametest.PartyHealthFloorGameTests"
+      "dev.shadowsoffire.gateways.gametest.PartyHealthFloorGameTests",
+      "dev.shadowsoffire.gateways.gametest.SummonFailureGameTests"
     ]
   },
   "depends": {

@@ -3,8 +3,10 @@ package dev.shadowsoffire.gateways.gametest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.serialization.Codec;
 
 import dev.shadowsoffire.gateways.GatewayObjects;
 import dev.shadowsoffire.gateways.entity.EndlessGatewayEntity;
@@ -34,7 +36,10 @@ import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
@@ -110,6 +115,20 @@ public final class RewardScaleGameTests {
     }
 
     @GameTest
+    public void oversizedStackTooltipShowsAuthoredCount(GameTestHelper helper) {
+        // Tooltips show the authored amount, including for a count above the max stack size, where create() would give 0 air.
+        List<MutableComponent> single = tooltip(helper, new StackReward(stack(Items.ENDER_PEARL, 32)));
+        helper.assertValueEqual(single.size(), 1, "tooltip lines of a stack reward");
+        assertCountLine(helper, single.get(0), 32, Items.ENDER_PEARL);
+
+        List<MutableComponent> list = tooltip(helper, new StackListReward(List.of(stack(Items.ENDER_PEARL, 32), stack(Items.EMERALD, 4))));
+        helper.assertValueEqual(list.size(), 2, "tooltip lines of a stack list reward");
+        assertCountLine(helper, list.get(0), 32, Items.ENDER_PEARL);
+        assertCountLine(helper, list.get(1), 4, Items.EMERALD);
+        helper.succeed();
+    }
+
+    @GameTest
     public void stackListRewardScalesEachEntry(GameTestHelper helper) {
         StackListReward reward = new StackListReward(List.of(stack(Items.DIAMOND, 16), stack(Items.EMERALD, 4)));
         List<ItemStack> items = generate(helper, reward, 2);
@@ -171,7 +190,7 @@ public final class RewardScaleGameTests {
 
     @GameTest
     public void countedRewardScalesCountOnce(GameTestHelper helper) {
-        // Three copies of a 16-stack at scale 2 are 3 * 2 * 16 diamonds. Scaling the wrapped stack as well would give 3 * 2 * 16 * 2 = 192.
+        // Three copies of a 16-stack scaled to 32 are 96 diamonds. Scaling the count of 3 as well would give 6 * 32 = 192.
         CountedReward reward = new CountedReward(new StackReward(stack(Items.DIAMOND, 16)), 3);
         helper.assertValueEqual(total(generate(helper, reward, 2)), 96, "diamonds from a counted reward at scale 2");
         helper.succeed();
@@ -246,6 +265,33 @@ public final class RewardScaleGameTests {
         finally {
             level.getEntitiesOfClass(Mob.class, box).forEach(e -> e.getPassengersAndSelf().forEach(Entity::discard));
         }
+        helper.succeed();
+    }
+
+    @GameTest
+    public void defaultOverloadRepeatsFourArgumentRewards(GameTestHelper helper) {
+        // A reward that only implements the four-argument method, as rewards written before 7.1.0 do, pays out one diamond per call.
+        Reward legacy = new LegacyReward();
+        helper.assertValueEqual(total(generate(helper, legacy, 1)), 1, "calls of a four-argument reward at scale 1");
+        helper.assertValueEqual(total(generate(helper, legacy, 3)), 3, "calls of a four-argument reward at scale 3");
+        helper.assertValueEqual(total(generate(helper, legacy, 0)), 0, "calls of a four-argument reward at scale 0");
+        // Wrappers pass the scale through to it: two counted repetitions at scale 3, and a certain chance at scale 3.
+        helper.assertValueEqual(total(generate(helper, new CountedReward(legacy, 2), 3)), 6, "calls of a counted four-argument reward of 2 at scale 3");
+        helper.assertValueEqual(total(generate(helper, new ChancedReward(legacy, 1F), 3)), 3, "calls of a certain chanced four-argument reward at scale 3");
+
+        GatewayEntity gate = gate(helper);
+        ServerPlayer summoner = summoner(helper);
+        int trials = 2000;
+        long sum = 0;
+        for (int i = 0; i < trials; i++) {
+            List<ItemStack> items = new ArrayList<>();
+            legacy.generateLoot(helper.getLevel(), gate, summoner, items::add, 2.5D);
+            int calls = total(items);
+            helper.assertTrue(calls == 2 || calls == 3, "a four-argument reward at scale 2.5 was called " + calls + " times");
+            sum += calls;
+        }
+        double mean = (double) sum / trials;
+        helper.assertTrue(Math.abs(mean - 2.5D) < 0.05D, "mean calls of a four-argument reward at scale 2.5 over " + trials + " trials was " + mean);
         helper.succeed();
     }
 
@@ -498,6 +544,26 @@ public final class RewardScaleGameTests {
         return items;
     }
 
+    private static List<MutableComponent> tooltip(GameTestHelper helper, Reward reward) {
+        List<MutableComponent> lines = new ArrayList<>();
+        reward.appendHoverText(Item.TooltipContext.of(helper.getLevel()), lines::add);
+        return lines;
+    }
+
+    /**
+     * Asserts that a tooltip line is the {@code tooltip.gateways.with_count} line for {@code count} of {@code item}.
+     */
+    private static void assertCountLine(GameTestHelper helper, MutableComponent line, int count, Item item) {
+        String expectedName = new ItemStack(item).getHoverName().getString();
+        helper.assertTrue(line.getContents() instanceof TranslatableContents t && "tooltip.gateways.with_count".equals(t.getKey()),
+            "expected a with_count tooltip line for " + expectedName + ", got " + line);
+        Object[] args = ((TranslatableContents) line.getContents()).getArgs();
+        helper.assertValueEqual(args.length, 2, "arguments of the tooltip line for " + expectedName);
+        helper.assertValueEqual(args[0], count, "count in the tooltip line for " + expectedName);
+        String name = args[1] instanceof Component c ? c.getString() : String.valueOf(args[1]);
+        helper.assertValueEqual(name, expectedName, "item name in the tooltip line for " + expectedName);
+    }
+
     private static ItemStackTemplate stack(Item item, int count) {
         return new ItemStackTemplate(item, count);
     }
@@ -587,6 +653,26 @@ public final class RewardScaleGameTests {
 
     private static int itemEntityCount(ServerLevel level, AABB box, Item item) {
         return level.getEntitiesOfClass(ItemEntity.class, box).stream().map(ItemEntity::getItem).filter(s -> s.getItem() == item).mapToInt(ItemStack::getCount).sum();
+    }
+
+    /**
+     * A reward that implements only the four-argument {@link Reward#generateLoot}, as rewards written before 7.1.0 do. Each call
+     * pays out one diamond, so the diamond count is the call count.
+     */
+    private static final class LegacyReward implements Reward {
+
+        @Override
+        public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list) {
+            list.accept(new ItemStack(Items.DIAMOND));
+        }
+
+        @Override
+        public void appendHoverText(Item.TooltipContext ctx, Consumer<MutableComponent> list) {}
+
+        @Override
+        public Codec<? extends Reward> getCodec() {
+            throw new UnsupportedOperationException("LegacyReward is never serialized");
+        }
     }
 
     /**

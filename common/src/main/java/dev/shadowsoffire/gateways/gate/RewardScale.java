@@ -46,10 +46,13 @@ public final class RewardScale {
     /**
      * Registers a provider. Its factor multiplies the factors of all other providers. Registering a provider that is already
      * registered does nothing, so its factor applies once.
+     * <p>
+     * Synchronized so the check and the add are one step: two threads registering the same provider, as NeoForge's parallel
+     * mod loading can, still add it once.
      *
      * @param provider The provider to register.
      */
-    public static void register(Provider provider) {
+    public static synchronized void register(Provider provider) {
         Objects.requireNonNull(provider);
         if (PROVIDERS.stream().noneMatch(p -> p == provider)) {
             PROVIDERS.add(provider);

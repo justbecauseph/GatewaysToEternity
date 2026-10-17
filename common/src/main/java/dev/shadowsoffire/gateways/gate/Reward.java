@@ -100,13 +100,18 @@ public interface Reward extends CodecProvider<Reward> {
     }
 
     /**
+     * Builds the template with a count of 1. Building it at its authored count would fail for a count above the max stack
+     * size, since {@link ItemStackTemplate#create()} returns {@link ItemStack#EMPTY} for such a count.
+     */
+    private static ItemStack prototype(ItemStackTemplate template) {
+        return template.withCount(1).create();
+    }
+
+    /**
      * Passes the template's authored count, scaled, to {@code list} as stacks no larger than the item's max stack size.
-     * <p>
-     * The template is built with a count of 1 first. Building it at its authored count would fail for a count above the max
-     * stack size, since {@link ItemStackTemplate#create()} returns {@link ItemStack#EMPTY} for such a count.
      */
     private static void emitStacks(ItemStackTemplate template, double scale, RandomSource random, Consumer<ItemStack> list) {
-        ItemStack prototype = template.withCount(1).create();
+        ItemStack prototype = prototype(template);
         if (prototype.isEmpty()) return;
         int remaining = RewardScale.scaleCount(template.count(), scale, random);
         int maxStack = prototype.getMaxStackSize();
@@ -148,9 +153,8 @@ public interface Reward extends CodecProvider<Reward> {
 
         @Override
         public void appendHoverText(TooltipContext ctx, Consumer<MutableComponent> list) {
-            ItemStack resolved = this.stack.create();
-            Component name = this.desc.<Component>map(Component::translatable).orElse(resolved.getHoverName());
-            list.accept(Gateways.lang("tooltip", "with_count", resolved.getCount(), name));
+            Component name = this.desc.<Component>map(Component::translatable).orElseGet(() -> prototype(this.stack).getHoverName());
+            list.accept(Gateways.lang("tooltip", "with_count", this.stack.count(), name));
         }
 
         @Override
@@ -184,8 +188,7 @@ public interface Reward extends CodecProvider<Reward> {
         @Override
         public void appendHoverText(TooltipContext ctx, Consumer<MutableComponent> list) {
             for (ItemStackTemplate stack : this.stacks) {
-                ItemStack resolved = stack.create();
-                list.accept(Gateways.lang("tooltip", "with_count", resolved.getCount(), resolved.getHoverName()));
+                list.accept(Gateways.lang("tooltip", "with_count", stack.count(), prototype(stack).getHoverName()));
             }
         }
 

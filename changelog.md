@@ -15,6 +15,7 @@
 * Fixed summon rewards not adding the summoned entity's passengers to the level. They now join the level riding their vehicle, as summon failures already did.
 * Fixed `gateways:loot_table` rewards throwing 'Parameters not allowed in this parameter set' on 26.2 because they passed a tool to the chest parameter set; Hellish Fortress and Overworldian Nights completion rewards could not generate.
 * Fixed stack rewards whose count is above their item's max stack size, such as 32 ender pearls, paying out nothing. They now pay out in full, split into max-size stacks.
+  * Their tooltips showed a count of 0 and logged a warning each time they were drawn. They now show the authored count and item.
 
 ## 7.0.4
 * Wave entities' passengers are now placed on their vehicle before `GateEvents.WAVE_ENTITY_SPAWNED` fires and the entity joins the level. This covers riders from the wave entity's NBT and riders that wave modifiers attach, such as Apotheosis's `apotheosis:passenger`.

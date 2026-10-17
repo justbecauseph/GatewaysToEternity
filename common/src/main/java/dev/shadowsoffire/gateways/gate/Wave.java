@@ -158,6 +158,8 @@ public record Wave(List<WaveEntity> entities, List<WaveModifier> modifiers, List
             }
         }
 
+        // After the wave modifiers and finalization, which can add riders.
+        WaveEntity.positionPassengers(entity);
         GateEvents.WAVE_ENTITY_SPAWNED.invoker().accept(gate, entity);
         level.addFreshEntityWithPassengers(entity);
         level.playSound(null, gate.getX(), gate.getY(), gate.getZ(), GatewayObjects.GATE_WARP.asHolder(), SoundSource.HOSTILE, 0.5F, 1);

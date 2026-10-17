@@ -150,8 +150,7 @@ public interface Failure extends CodecProvider<Failure> {
                 if (ent != null) {
                     Vec3 pos = gate.getGateway().spawnAlgo().spawn(level, gate.position(), gate, ent);
                     ent.setPos(pos != null ? pos : gate.position());
-                    // Passengers stay where they were loaded (usually 0, 0, 0) until they ride-tick, and a passenger only ride-ticks while its own chunk ticks.
-                    ent.getIndirectPassengers().forEach(p -> p.getVehicle().positionRider(p));
+                    WaveEntity.positionPassengers(ent);
                     GateEvents.FAILURE_ENTITY_SPAWNED.invoker().accept(gate, ent);
                     level.addFreshEntityWithPassengers(ent);
                 }

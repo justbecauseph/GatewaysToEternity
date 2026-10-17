@@ -10,6 +10,7 @@ import dev.shadowsoffire.placebo.codec.CodecMap;
 import dev.shadowsoffire.placebo.codec.CodecProvider;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
@@ -40,6 +41,17 @@ public interface WaveEntity extends CodecProvider<WaveEntity> {
             GatewayRegistry.INSTANCE.holder(gate.getGateway()).getId(),
             gate.blockPosition(),
             failureReason);
+    }
+
+    /**
+     * Places every direct and indirect passenger of {@code entity} on its vehicle. Call it once {@code entity} is positioned
+     * and has all of its riders, before it joins the level.
+     * <p>
+     * Passengers stay where they were loaded or created (usually 0, 0, 0) until they ride-tick, and a passenger only
+     * ride-ticks while its own chunk ticks, so one added at its load position may never reach its vehicle.
+     */
+    public static void positionPassengers(Entity entity) {
+        entity.getIndirectPassengers().forEach(p -> p.getVehicle().positionRider(p));
     }
 
     /**

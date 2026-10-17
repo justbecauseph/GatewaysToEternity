@@ -1,3 +1,8 @@
+## 7.0.4
+* Wave entities' passengers are now placed on their vehicle before `GateEvents.WAVE_ENTITY_SPAWNED` fires and the entity joins the level. This covers riders from the wave entity's NBT and riders that wave modifiers attach, such as Apotheosis's `apotheosis:passenger`.
+  * Previously they joined the level at their load position, usually (0, 0, 0). A rider in an unloaded chunk never moved onto its vehicle and could not be found by UUID.
+  * Addons that spawn wave entities themselves can call `WaveEntity.positionPassengers(Entity)` before adding the entity to the level.
+
 ## 7.0.3
 * Summon failures now fire `GateEvents.FAILURE_ENTITY_SPAWNED` for each summoned entity, just before it and its passengers join the level, so listeners can record state that entity-add processing reads.
   * Failure summons do not fire `WAVE_ENTITY_SPAWNED`: they are not wave members, and are summoned while the gateway fails.

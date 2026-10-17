@@ -44,11 +44,12 @@ public class GateEvents {
     /**
      * Fired for each entity spawned as part of a wave, just before it and its passengers are added to the level.
      * <p>
-     * By then the entity is positioned (its passengers are not), owned by the gate, carries its wave's modifiers, the party
-     * health floor and the gate rules, and has been finalized if its wave entity asks for it. An endless gateway applies the
-     * wave modifiers of its endless modifiers later, after the whole wave has joined the level. Entity-add processing runs
-     * after the event, so listeners can record state that it reads. Fired once per spawned entity, not per passenger;
-     * passengers are reachable through {@link net.minecraft.world.entity.Entity#getPassengersAndSelf()}.
+     * By then the entity is positioned, owned by the gate, carries its wave's modifiers, the party health floor and the gate
+     * rules, and has been finalized if its wave entity asks for it. Its passengers, including riders that wave modifiers or
+     * finalization attach, sit on it. An endless gateway applies the wave modifiers of its endless modifiers later, after the
+     * whole wave has joined the level. Entity-add processing runs after the event, so listeners can record state that it
+     * reads. Fired once per spawned entity, not per passenger; passengers are reachable through
+     * {@link net.minecraft.world.entity.Entity#getPassengersAndSelf()}.
      */
     public static final Event<WaveEntitySpawnedCallback> WAVE_ENTITY_SPAWNED = EventFactory.createLoop();
 

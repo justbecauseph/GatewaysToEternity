@@ -24,6 +24,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
@@ -61,6 +62,25 @@ public interface Reward extends CodecProvider<Reward> {
      */
     public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list);
 
+    /**
+     * Generates this reward with its quantity multiplied by {@code scale}. Implementations scale the amount they pay out
+     * (stack counts, loot rolls, experience) once, and wrappers pass the scale to the reward they wrap. The default calls
+     * the four-argument {@link #generateLoot(ServerLevel, GatewayEntity, Player, Consumer)} {@code RewardScale.scaleCount(1, scale, random)}
+     * times, which suits rewards that pay out one thing per call.
+     *
+     * @param level    The level the gateway is in
+     * @param gate     The gateway entity
+     * @param summoner The summoning player
+     * @param list     When generating item rewards, add them to this list instead of directly to the player or the world.
+     * @param scale    The factor from {@link RewardScale#of}. 1 generates the reward unchanged.
+     */
+    public default void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list, double scale) {
+        int times = RewardScale.scaleCount(1, scale, level.getRandom());
+        for (int i = 0; i < times; i++) {
+            this.generateLoot(level, gate, summoner, list);
+        }
+    }
+
     public void appendHoverText(TooltipContext ctx, Consumer<MutableComponent> list);
 
     public static void initCodecs() {
@@ -77,6 +97,24 @@ public interface Reward extends CodecProvider<Reward> {
 
     private static void register(String id, Codec<? extends Reward> codec) {
         CODEC.register(Gateways.loc(id), codec);
+    }
+
+    /**
+     * Passes the template's authored count, scaled, to {@code list} as stacks no larger than the item's max stack size.
+     * <p>
+     * The template is built with a count of 1 first. Building it at its authored count would fail for a count above the max
+     * stack size, since {@link ItemStackTemplate#create()} returns {@link ItemStack#EMPTY} for such a count.
+     */
+    private static void emitStacks(ItemStackTemplate template, double scale, RandomSource random, Consumer<ItemStack> list) {
+        ItemStack prototype = template.withCount(1).create();
+        if (prototype.isEmpty()) return;
+        int remaining = RewardScale.scaleCount(template.count(), scale, random);
+        int maxStack = prototype.getMaxStackSize();
+        while (remaining > 0) {
+            int count = Math.min(remaining, maxStack);
+            list.accept(prototype.copyWithCount(count));
+            remaining -= count;
+        }
     }
 
     /**
@@ -100,7 +138,12 @@ public interface Reward extends CodecProvider<Reward> {
 
         @Override
         public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list) {
-            list.accept(this.stack.create());
+            this.generateLoot(level, gate, summoner, list, 1);
+        }
+
+        @Override
+        public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list, double scale) {
+            emitStacks(this.stack, scale, level.getRandom(), list);
         }
 
         @Override
@@ -128,7 +171,14 @@ public interface Reward extends CodecProvider<Reward> {
 
         @Override
         public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list) {
-            this.stacks.forEach(s -> list.accept(s.create()));
+            this.generateLoot(level, gate, summoner, list, 1);
+        }
+
+        @Override
+        public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list, double scale) {
+            for (ItemStackTemplate stack : this.stacks) {
+                emitStacks(stack, scale, level.getRandom(), list);
+            }
         }
 
         @Override
@@ -159,6 +209,18 @@ public interface Reward extends CodecProvider<Reward> {
 
         @Override
         public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list) {
+            this.generateLoot(level, gate, summoner, list, 1);
+        }
+
+        @Override
+        public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list, double scale) {
+            this.rollLoot(level, summoner, list, RewardScale.scaleCount(this.rolls, scale, level.getRandom()));
+        }
+
+        /**
+         * Creates the entity once, rolls its loot table {@code rolls} times as if the summoner had killed it, and removes the entity.
+         */
+        private void rollLoot(ServerLevel level, Player summoner, Consumer<ItemStack> list, int rolls) {
             try {
                 CompoundTag data = this.nbt != null ? this.nbt.copy() : new CompoundTag();
                 data.putString("id", BuiltInRegistries.ENTITY_TYPE.getKey(this.type).toString());
@@ -167,7 +229,7 @@ public interface Reward extends CodecProvider<Reward> {
                 PersistentData.of(entity).putBoolean("apoth.no_pinata", true);
                 if (entity instanceof LivingEntity living) {
                     Optional<ResourceKey<LootTable>> table = living.getLootTable();
-                    for (int i = 0; i < this.rolls && table.isPresent(); i++) {
+                    for (int i = 0; i < rolls && table.isPresent(); i++) {
                         living.snapTo(summoner.getX(), summoner.getY(), summoner.getZ(), 0, 0);
                         DamageSource src = new DamageSource(level.registryAccess().lookupOrThrow(Registries.DAMAGE_TYPE).getOrThrow(DamageTypes.GENERIC_KILL), summoner);
                         living.hurtServer(level, src, 1);
@@ -210,10 +272,16 @@ public interface Reward extends CodecProvider<Reward> {
 
         @Override
         public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list) {
+            this.generateLoot(level, gate, summoner, list, 1);
+        }
+
+        @Override
+        public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list, double scale) {
             LootTable realTable = level.getServer().reloadableRegistries().getLootTable(ResourceKey.create(Registries.LOOT_TABLE, this.table));
-            for (int i = 0; i < this.rolls; i++) {
+            int rolls = RewardScale.scaleCount(this.rolls, scale, level.getRandom());
+            for (int i = 0; i < rolls; i++) {
                 LootParams.Builder ctx = new LootParams.Builder(level).withParameter(LootContextParams.ORIGIN, gate.getPosition(1));
-                ctx.withLuck(summoner.getLuck()).withParameter(LootContextParams.THIS_ENTITY, summoner).withParameter(LootContextParams.TOOL, summoner.getMainHandItem());
+                ctx.withLuck(summoner.getLuck()).withParameter(LootContextParams.THIS_ENTITY, summoner);
                 realTable.getRandomItems(ctx.create(LootContextParamSets.CHEST)).forEach(list);
             }
         }
@@ -248,7 +316,15 @@ public interface Reward extends CodecProvider<Reward> {
 
         @Override
         public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list) {
-            if (level.getRandom().nextFloat() < this.chance) this.reward.generateLoot(level, gate, summoner, list);
+            this.generateLoot(level, gate, summoner, list, 1);
+        }
+
+        /**
+         * Rolls the chance once, then generates the wrapped reward with the scale.
+         */
+        @Override
+        public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list, double scale) {
+            if (level.getRandom().nextFloat() < this.chance) this.reward.generateLoot(level, gate, summoner, list, scale);
         }
 
         @Override
@@ -281,6 +357,14 @@ public interface Reward extends CodecProvider<Reward> {
             level.getServer().getCommands().performPrefixedCommand(gate.createCommandSourceStackForNameResolution((ServerLevel) gate.level()), realCmd);
         }
 
+        /**
+         * Commands never scale: the command runs once regardless of the scale.
+         */
+        @Override
+        public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list, double scale) {
+            this.generateLoot(level, gate, summoner, list);
+        }
+
         @Override
         public void appendHoverText(TooltipContext ctx, Consumer<MutableComponent> list) {
             list.accept(Component.translatable(this.desc));
@@ -305,7 +389,12 @@ public interface Reward extends CodecProvider<Reward> {
 
         @Override
         public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list) {
-            int remaining = this.xp;
+            this.generateLoot(level, gate, summoner, list, 1);
+        }
+
+        @Override
+        public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list, double scale) {
+            int remaining = RewardScale.scaleCount(this.xp, scale, level.getRandom());
             while (remaining > 0) {
                 remaining -= orbSize;
                 level.addFreshEntity(new ExperienceOrb(level, gate.getX(), gate.getY(), gate.getZ(), orbSize));
@@ -340,9 +429,18 @@ public interface Reward extends CodecProvider<Reward> {
                 if (ent != null) {
                     Vec3 pos = gate.getGateway().spawnAlgo().spawn(level, gate.position(), gate, ent);
                     ent.setPos(pos != null ? pos : gate.position());
-                    level.addFreshEntity(ent);
+                    WaveEntity.positionPassengers(ent);
+                    level.addFreshEntityWithPassengers(ent);
                 }
             }
+        }
+
+        /**
+         * Summons are never scaled: the entity count is the authored count regardless of the scale.
+         */
+        @Override
+        public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list, double scale) {
+            this.generateLoot(level, gate, summoner, list);
         }
 
         @Override
@@ -369,8 +467,18 @@ public interface Reward extends CodecProvider<Reward> {
 
         @Override
         public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list) {
+            this.generateLoot(level, gate, summoner, list, 1);
+        }
+
+        /**
+         * Repeats the wrapped reward {@code count} times, and passes the scale to each repetition. Each repetition scales the
+         * wrapped reward once, so a count of 3 at scale 2 gives three copies of a 16-stack doubled to 32, or 96 in total. Command
+         * and summon rewards ignore the scale, so they still run or summon once per count.
+         */
+        @Override
+        public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list, double scale) {
             for (int i = 0; i < this.count; i++) {
-                this.reward.generateLoot(level, gate, summoner, list);
+                this.reward.generateLoot(level, gate, summoner, list, scale);
             }
         }
 

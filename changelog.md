@@ -1,3 +1,21 @@
+## 7.1.0
+* Added `RewardScale`, a hook for other mods to scale gateway rewards. Gateways itself does not compute a scale.
+  * Register a `RewardScale.Provider` with `RewardScale.register`. Each provider returns a factor for a gateway's rewards, and the factors multiply. The product is clamped to `RewardScale.MAX_SCALE`, which is 16. With no providers the scale is 1, so rewards are unchanged.
+  * Registering a provider that is already registered does nothing, so its factor applies once.
+  * A provider returning NaN, infinity or a negative value is ignored. A provider that throws a `RuntimeException` or `LinkageError` counts as 1. Gateways logs a warning once per provider class, so a broken provider cannot make a gate lose its rewards.
+* Gateway rewards scale when a wave or a gateway completes. Wave rewards, completion rewards and endless modifier rewards all apply the scale. Each reward scales once, and fractional amounts round up with a probability equal to their fraction, so the average is the authored amount times the scale.
+  * Stack and stack list rewards: the item count scales. Stacks are split to the item's max stack size.
+  * Entity loot and loot table rewards: the number of rolls scales.
+  * Experience rewards: the experience scales.
+  * Chanced rewards keep their chance, and pass the scale to the reward they wrap.
+  * Counted rewards: the wrapped reward is repeated the authored count of times, and each repetition gets the scale.
+  * Command and summon rewards never scale. A counted command runs once per count, and a counted summon summons once per count.
+  * Tooltips still show the authored amounts.
+* Added a five-argument `Reward.generateLoot` overload that takes the scale. Its default generates the reward a whole number of times, rounded so the expected count is the scale. This suits rewards that pay out one thing per call.
+* Fixed summon rewards not adding the summoned entity's passengers to the level. They now join the level riding their vehicle, as summon failures already did.
+* Fixed `gateways:loot_table` rewards throwing 'Parameters not allowed in this parameter set' on 26.2 because they passed a tool to the chest parameter set; Hellish Fortress and Overworldian Nights completion rewards could not generate.
+* Fixed stack rewards whose count is above their item's max stack size, such as 32 ender pearls, paying out nothing. They now pay out in full, split into max-size stacks.
+
 ## 7.0.4
 * Wave entities' passengers are now placed on their vehicle before `GateEvents.WAVE_ENTITY_SPAWNED` fires and the entity joins the level. This covers riders from the wave entity's NBT and riders that wave modifiers attach, such as Apotheosis's `apotheosis:passenger`.
   * Previously they joined the level at their load position, usually (0, 0, 0). A rider in an unloaded chunk never moved onto its vehicle and could not be found by UUID.

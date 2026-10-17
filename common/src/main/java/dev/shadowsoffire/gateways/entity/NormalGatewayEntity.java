@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 
 import dev.shadowsoffire.gateways.GatewayObjects;
 import dev.shadowsoffire.gateways.gate.Gateway;
+import dev.shadowsoffire.gateways.gate.RewardScale;
 import dev.shadowsoffire.gateways.gate.Wave;
 import dev.shadowsoffire.gateways.gate.normal.NormalGateway;
 import dev.shadowsoffire.placebo.dynreg.DynamicHolder;
@@ -59,8 +60,9 @@ public class NormalGatewayEntity extends GatewayEntity {
     protected void completeGateway() {
         super.completeGateway();
         Player player = this.summonerOrClosest();
+        double scale = RewardScale.of(this, player);
         this.getGateway().rewards().forEach(r -> {
-            r.generateLoot((ServerLevel) this.level(), this, player, this::spawnCompletionItem);
+            r.generateLoot((ServerLevel) this.level(), this, player, this::spawnCompletionItem, scale);
         });
     }
 

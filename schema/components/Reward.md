@@ -1,5 +1,6 @@
 # Description
 A Reward is something provided by a Gateway when an objective is completed.  
+Its quantities are multiplied by the reward scale that other mods provide through `RewardScale`. A counted reward passes the scale to the reward it repeats, and command and summon rewards never scale.  
 
 # Dependencies
 This object references the following objects:

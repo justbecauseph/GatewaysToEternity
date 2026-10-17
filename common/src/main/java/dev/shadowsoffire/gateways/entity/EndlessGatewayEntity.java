@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 
 import dev.shadowsoffire.gateways.GatewayObjects;
 import dev.shadowsoffire.gateways.gate.Gateway;
+import dev.shadowsoffire.gateways.gate.RewardScale;
 import dev.shadowsoffire.gateways.gate.Wave;
 import dev.shadowsoffire.gateways.gate.WaveEntity;
 import dev.shadowsoffire.gateways.gate.WaveModifier;
@@ -112,7 +113,8 @@ public class EndlessGatewayEntity extends GatewayEntity {
     protected void completeWave() {
         Player player = this.summonerOrClosest();
         this.undroppedItems.addAll(this.getCurrentWave().spawnRewards((ServerLevel) this.level(), this, player));
-        executeModifiers(m -> m.rewards().forEach(r -> r.generateLoot((ServerLevel) this.level(), this, player, this.undroppedItems::add)));
+        double scale = RewardScale.of(this, player);
+        executeModifiers(m -> m.rewards().forEach(r -> r.generateLoot((ServerLevel) this.level(), this, player, this.undroppedItems::add, scale)));
         this.computeMaxEnemies(this.getWave() + 1); // Precompute max enemies for the next wave so it can be displayed.
     }
 

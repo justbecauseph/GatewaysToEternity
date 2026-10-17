@@ -7,6 +7,7 @@
   "entrypoints": {
     "fabric-gametest": [
       "dev.shadowsoffire.gateways.gametest.PartyHealthFloorGameTests",
+      "dev.shadowsoffire.gateways.gametest.RewardScaleGameTests",
       "dev.shadowsoffire.gateways.gametest.SummonFailureGameTests",
       "dev.shadowsoffire.gateways.gametest.WavePassengerGameTests"
     ]

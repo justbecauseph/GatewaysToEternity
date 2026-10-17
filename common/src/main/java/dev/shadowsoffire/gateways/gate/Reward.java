@@ -72,7 +72,9 @@ public interface Reward extends CodecProvider<Reward> {
      * @param gate     The gateway entity
      * @param summoner The summoning player
      * @param list     When generating item rewards, add them to this list instead of directly to the player or the world.
-     * @param scale    The factor from {@link RewardScale#of}. 1 generates the reward unchanged.
+     * @param scale    The factor from {@link RewardScale#of}. 1 generates the reward unchanged. The built-in rewards clamp it as
+     *                 {@link RewardScale#scaleCount} does: NaN and negative scales count as 0, and scales above
+     *                 {@link RewardScale#MAX_SCALE} count as {@link RewardScale#MAX_SCALE}.
      */
     public default void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list, double scale) {
         int times = RewardScale.scaleCount(1, scale, level.getRandom());
@@ -380,7 +382,10 @@ public interface Reward extends CodecProvider<Reward> {
     }
 
     /**
-     * Provides a certain amount of XP as a reward.
+     * Provides a certain amount of XP as a reward, as orbs of {@code orbSize} experience each.
+     * <p>
+     * An {@code orbSize} below 1 is treated as 1. The codec accepts it rather than rejecting it, so a datapack that sets one
+     * still loads; such a reward used to hang the server when it was granted.
      */
     public static record ExperienceReward(int xp, int orbSize) implements Reward {
 
@@ -390,17 +395,26 @@ public interface Reward extends CodecProvider<Reward> {
                 Codec.INT.optionalFieldOf("orb_size", 5).forGetter(ExperienceReward::orbSize))
             .apply(inst, ExperienceReward::new));
 
+        public ExperienceReward {
+            orbSize = Math.max(1, orbSize);
+        }
+
         @Override
         public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list) {
             this.generateLoot(level, gate, summoner, list, 1);
         }
 
+        /**
+         * Spawns {@code xp / orbSize} orbs, rounded up, with the orb count scaled. Unscaled this is the payout of 7.0.4 and
+         * earlier, which rounds the experience up to whole orbs. Scaling the orb count keeps the orbs whole, so the expected
+         * experience is that payout times the scale; scaling the experience and then spawning whole orbs would round each
+         * scaled payout up to a multiple of {@code orbSize}.
+         */
         @Override
         public void generateLoot(ServerLevel level, GatewayEntity gate, Player summoner, Consumer<ItemStack> list, double scale) {
-            int remaining = RewardScale.scaleCount(this.xp, scale, level.getRandom());
-            while (remaining > 0) {
-                remaining -= orbSize;
-                level.addFreshEntity(new ExperienceOrb(level, gate.getX(), gate.getY(), gate.getZ(), orbSize));
+            int orbs = RewardScale.scaleCount(this.xp > 0 ? Math.ceilDiv(this.xp, this.orbSize) : 0, scale, level.getRandom());
+            for (int i = 0; i < orbs; i++) {
+                level.addFreshEntity(new ExperienceOrb(level, gate.getX(), gate.getY(), gate.getZ(), this.orbSize));
             }
         }
 

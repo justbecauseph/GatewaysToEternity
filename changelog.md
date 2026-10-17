@@ -2,20 +2,23 @@
 * Added `RewardScale`, a hook for other mods to scale gateway rewards. Gateways itself does not compute a scale.
   * Register a `RewardScale.Provider` with `RewardScale.register`. Each provider returns a factor for a gateway's rewards, and the factors multiply. The product is clamped to `RewardScale.MAX_SCALE`, which is 16. With no providers the scale is 1, so rewards are unchanged.
   * Registering a provider that is already registered does nothing, so its factor applies once.
-  * A provider returning NaN, infinity or a negative value is ignored. A provider that throws a `RuntimeException` or `LinkageError` counts as 1. Gateways logs a warning once per provider class, so a broken provider cannot make a gate lose its rewards.
+  * A provider returning NaN, infinity or a negative value is ignored. A provider that throws counts as 1, so a broken provider cannot make a gate lose its rewards. This covers any `Exception`, including a checked exception thrown undeclared from Kotlin or `@SneakyThrows`, and `LinkageError` and `AssertionError`.
+  * Gateways logs at most one warning per provider class for an ignored value and one for a throw, with its stack trace.
 * Gateway rewards scale when a wave or a gateway completes. Wave rewards, completion rewards and endless modifier rewards all apply the scale. Each reward scales once, and fractional amounts round up with a probability equal to their fraction, so the average is the authored amount times the scale.
   * Stack and stack list rewards: the item count scales. Stacks are split to the item's max stack size.
   * Entity loot and loot table rewards: the number of rolls scales.
-  * Experience rewards: the experience scales.
+  * Experience rewards: the number of orbs scales, and each orb is still `orb_size`. Unscaled they pay as before, `experience / orb_size` orbs rounded up, so the average is that payout times the scale. When `experience` is a multiple of `orb_size`, as in the stock gateways, that is `experience` times the scale.
   * Chanced rewards keep their chance, and pass the scale to the reward they wrap.
   * Counted rewards: the wrapped reward is repeated the authored count of times, and each repetition gets the scale.
   * Command and summon rewards never scale. A counted command runs once per count, and a counted summon summons once per count.
   * Tooltips still show the authored amounts.
 * Added a five-argument `Reward.generateLoot` overload that takes the scale. Its default generates the reward a whole number of times, rounded so the expected count is the scale. This suits rewards that pay out one thing per call.
+  * The built-in rewards, the default and `RewardScale.scaleCount` clamp the scale they are given: NaN and negative scales count as 0, and scales above `RewardScale.MAX_SCALE` count as `MAX_SCALE`. A caller passing infinity can no longer make a reward loop about 2^31 times.
 * Fixed summon rewards not adding the summoned entity's passengers to the level. They now join the level riding their vehicle, as summon failures already did.
 * Fixed `gateways:loot_table` rewards throwing 'Parameters not allowed in this parameter set' on 26.2 because they passed a tool to the chest parameter set; Hellish Fortress and Overworldian Nights completion rewards could not generate.
 * Fixed stack rewards whose count is above their item's max stack size, such as 32 ender pearls, paying out nothing. They now pay out in full, split into max-size stacks.
   * Their tooltips showed a count of 0 and logged a warning each time they were drawn. They now show the authored count and item.
+* Fixed experience rewards with an `orb_size` below 1 hanging the server when they were granted. Such an `orb_size` is now treated as 1, and the gateway still loads.
 
 ## 7.0.4
 * Wave entities' passengers are now placed on their vehicle before `GateEvents.WAVE_ENTITY_SPAWNED` fires and the entity joins the level. This covers riders from the wave entity's NBT and riders that wave modifiers attach, such as Apotheosis's `apotheosis:passenger`.

@@ -78,14 +78,14 @@ The command will be executed as the gateway entity with a permission level of 2.
 ```
 
 ## Experience Reward
-Rewards a certain amount of experience.
+Rewards a certain amount of experience, as `experience / orb_size` orbs rounded up. The reward scale multiplies the number of orbs.
 
 ### Schema
 ```js
 {
     "type": "gateways:experience",
     "experience": integer,  // [Mandatory] || The amount of experience that will be granted.
-    "orb_size": integer     // [Optional]  || The size of the experience orbs that will be generated. A larger value will cause fewer individual orbs to generate. Default value = 5.
+    "orb_size": integer     // [Optional]  || The size of the experience orbs that will be generated. A larger value will cause fewer individual orbs to generate. Values below 1 are treated as 1. Default value = 5.
 }
 ```
 

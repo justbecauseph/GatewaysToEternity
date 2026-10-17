@@ -1,14 +1,27 @@
 package dev.shadowsoffire.gateways.gametest;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.apache.logging.log4j.core.config.Property;
+
+import com.google.gson.JsonObject;
 import com.mojang.authlib.GameProfile;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.JsonOps;
 
 import dev.shadowsoffire.gateways.GatewayObjects;
+import dev.shadowsoffire.gateways.Gateways;
 import dev.shadowsoffire.gateways.entity.EndlessGatewayEntity;
 import dev.shadowsoffire.gateways.entity.GatewayEntity;
 import dev.shadowsoffire.gateways.entity.NormalGatewayEntity;
@@ -151,6 +164,66 @@ public final class RewardScaleGameTests {
         finally {
             level.getEntitiesOfClass(ExperienceOrb.class, box).forEach(Entity::discard);
         }
+        helper.succeed();
+    }
+
+    @GameTest
+    public void experienceRewardAveragesXpTimesScale(GameTestHelper helper) {
+        // 10 experience in orbs of 5 at scale 1.3 is 13 on average. 13 is not a multiple of 5, so paying the scaled experience in
+        // whole orbs of 5 would pay 15 every time.
+        GatewayEntity gate = gate(helper);
+        ServerPlayer summoner = summoner(helper);
+        ExperienceReward reward = new ExperienceReward(10, 5);
+
+        helper.assertValueEqual(spawnOrbs(helper, gate, summoner, reward, 1), List.of(5, 5), "orbs from 10 experience in orbs of 5 at scale 1");
+
+        int trials = 2000;
+        long sum = 0;
+        for (int i = 0; i < trials; i++) {
+            List<Integer> orbs = spawnOrbs(helper, gate, summoner, reward, 1.3D);
+            for (int orb : orbs) {
+                helper.assertTrue(orb > 0 && orb <= 5, "an orb of " + orb + " experience from a reward with orbs of 5");
+            }
+            sum += orbs.stream().mapToInt(Integer::intValue).sum();
+        }
+        // If the orb count is what scales, a trial pays 10 or 15 with a standard deviation of about 2.45, so the mean's standard
+        // deviation over 2000 trials is about 0.055 and 0.25 is over 4 deviations.
+        double mean = (double) sum / trials;
+        helper.assertTrue(Math.abs(mean - 13D) < 0.25D, "mean experience from 10 experience in orbs of 5 at scale 1.3 over " + trials + " trials was " + mean);
+        helper.succeed();
+    }
+
+    @GameTest
+    public void experienceRewardPaysAsBeforeAtScaleOne(GameTestHelper helper) {
+        // Unscaled, an experience reward pays what 7.0.4 paid: orbs of orb_size until the experience is covered, so 10 experience
+        // in orbs of 3 is four orbs, 12 experience. The stock gateways' 500 in orbs of 25 is 20 orbs.
+        GatewayEntity gate = gate(helper);
+        ServerPlayer summoner = summoner(helper);
+        helper.assertValueEqual(spawnOrbs(helper, gate, summoner, new ExperienceReward(10, 3), 1), List.of(3, 3, 3, 3), "orbs from 10 experience in orbs of 3 at scale 1");
+        List<Integer> stock = spawnOrbs(helper, gate, summoner, new ExperienceReward(500, 25), 1);
+        helper.assertValueEqual(stock.size(), 20, "orbs from 500 experience in orbs of 25 at scale 1");
+        helper.assertTrue(stock.stream().allMatch(orb -> orb == 25), "orbs from 500 experience in orbs of 25 were " + stock);
+        helper.assertValueEqual(spawnOrbs(helper, gate, summoner, new ExperienceReward(0, 5), 1), List.of(), "orbs from 0 experience at scale 1");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void experienceOrbSizeBelowOneCountsAsOne(GameTestHelper helper) {
+        // An orb_size of 0 never covered the experience and a negative one moved away from it, so granting the reward hung the
+        // server. A datapack that sets one still loads, with orbs of 1.
+        helper.assertValueEqual(new ExperienceReward(10, 0).orbSize(), 1, "orb size of a reward with orb_size 0");
+        helper.assertValueEqual(new ExperienceReward(10, -5).orbSize(), 1, "orb size of a reward with orb_size -5");
+
+        JsonObject json = new JsonObject();
+        json.addProperty("experience", 3);
+        json.addProperty("orb_size", 0);
+        ExperienceReward decoded = ExperienceReward.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow();
+        helper.assertValueEqual(decoded.orbSize(), 1, "orb size of a decoded reward with orb_size 0");
+
+        GatewayEntity gate = gate(helper);
+        ServerPlayer summoner = summoner(helper);
+        helper.assertValueEqual(spawnOrbs(helper, gate, summoner, decoded, 1), List.of(1, 1, 1), "orbs from 3 experience with orb_size 0 at scale 1");
+        helper.assertValueEqual(spawnOrbs(helper, gate, summoner, new ExperienceReward(2, -5), 2), List.of(1, 1, 1, 1), "orbs from 2 experience with orb_size -5 at scale 2");
         helper.succeed();
     }
 
@@ -335,6 +408,28 @@ public final class RewardScaleGameTests {
     }
 
     @GameTest
+    public void scaleCountClampsScale(GameTestHelper helper) {
+        // Callers of scaleCount and the five-argument generateLoot can pass any scale. NaN and negative scales count as 0, and
+        // scales above MAX_SCALE (16) count as 16, so an infinite scale cannot make a reward loop 2^31 times.
+        RandomSource random = RandomSource.create(7L);
+        helper.assertValueEqual(RewardScale.scaleCount(3, Double.POSITIVE_INFINITY, random), 48, "3 at an infinite scale");
+        helper.assertValueEqual(RewardScale.scaleCount(3, 1.0E300D, random), 48, "3 at scale 1e300");
+        helper.assertValueEqual(RewardScale.scaleCount(3, 17, random), 48, "3 at scale 17");
+        helper.assertValueEqual(RewardScale.scaleCount(3, 16, random), 48, "3 at scale 16");
+        helper.assertValueEqual(RewardScale.scaleCount(3, Double.NaN, random), 0, "3 at a NaN scale");
+        helper.assertValueEqual(RewardScale.scaleCount(3, -2, random), 0, "3 at scale -2");
+        helper.assertValueEqual(RewardScale.scaleCount(3, Double.NEGATIVE_INFINITY, random), 0, "3 at a negative infinite scale");
+
+        StackReward diamond = new StackReward(stack(Items.DIAMOND, 1));
+        Reward legacy = new LegacyReward();
+        helper.assertValueEqual(total(generate(helper, diamond, Double.POSITIVE_INFINITY)), 16, "diamonds from a 1-count stack at an infinite scale");
+        helper.assertValueEqual(total(generate(helper, legacy, Double.POSITIVE_INFINITY)), 16, "calls of a four-argument reward at an infinite scale");
+        helper.assertValueEqual(total(generate(helper, diamond, Double.NaN)), 0, "diamonds from a 1-count stack at a NaN scale");
+        helper.assertValueEqual(total(generate(helper, legacy, -1)), 0, "calls of a four-argument reward at scale -1");
+        helper.succeed();
+    }
+
+    @GameTest
     public void providerScalesWaveRewards(GameTestHelper helper) {
         GatewayEntity gate = gate(helper);
         ServerPlayer summoner = summoner(helper);
@@ -453,6 +548,73 @@ public final class RewardScaleGameTests {
     }
 
     @GameTest
+    public void checkedExceptionAndAssertionErrorCountAsOne(GameTestHelper helper) {
+        // Kotlin code and @SneakyThrows can throw a checked exception that scale() does not declare, and assert statements throw
+        // AssertionError. Either one escaping RewardScale.of would crash the gateway tick.
+        GatewayEntity gate = gate(helper);
+        ServerPlayer summoner = summoner(helper);
+        RewardScale.Provider checked = (g, p) -> sneakyThrow(new IOException("broken provider"));
+        RewardScale.Provider assertion = (g, p) -> {
+            throw new AssertionError("broken provider");
+        };
+        RewardScale.Provider three = (g, p) -> 3;
+
+        RewardScale.register(checked);
+        RewardScale.register(assertion);
+        RewardScale.register(three);
+        try {
+            helper.assertValueEqual(RewardScale.of(gate, summoner), 3D, "combined scale of providers throwing IOException and AssertionError and a provider of 3");
+            helper.assertValueEqual(total(diamondWave().spawnRewards(helper.getLevel(), gate, summoner)), 48, "diamonds from a wave beside the throwing providers");
+        }
+        finally {
+            RewardScale.unregister(checked);
+            RewardScale.unregister(assertion);
+            RewardScale.unregister(three);
+        }
+        helper.succeed();
+    }
+
+    @GameTest
+    public void providerWarnsOncePerProblem(GameTestHelper helper) {
+        // A provider that first returns NaN and then throws logs both warnings, the second with its stack trace. Further throws
+        // log nothing more.
+        GatewayEntity gate = gate(helper);
+        ServerPlayer summoner = summoner(helper);
+        AtomicInteger calls = new AtomicInteger();
+        RewardScale.Provider flaky = (g, p) -> {
+            if (calls.getAndIncrement() == 0) return Double.NaN;
+            throw new IllegalStateException("flaky provider");
+        };
+        String name = flaky.getClass().getName();
+
+        // Adds the appender to the logger config that Gateways' logger already logs through (the root config). Logger.addAppender
+        // would instead give the logger a config of its own, after which its events no longer reached the console or latest.log.
+        org.apache.logging.log4j.core.Logger logger = (org.apache.logging.log4j.core.Logger) LogManager.getLogger(Gateways.LOGGER.getName());
+        LoggerConfig config = logger.getContext().getConfiguration().getLoggerConfig(logger.getName());
+        CapturingAppender appender = new CapturingAppender();
+        appender.start();
+        config.addAppender(appender, Level.WARN, null);
+        RewardScale.register(flaky);
+        try {
+            for (int i = 0; i < 3; i++) {
+                helper.assertValueEqual(RewardScale.of(gate, summoner), 1D, "scale of a provider that returned NaN or threw, call " + (i + 1));
+            }
+        }
+        finally {
+            RewardScale.unregister(flaky);
+            config.removeAppender(appender.getName());
+            appender.stop();
+        }
+
+        List<LogEvent> warnings = appender.events.stream().filter(e -> e.getMessage().getFormattedMessage().contains(name)).toList();
+        helper.assertValueEqual(warnings.size(), 2, "warnings about a provider that returned NaN once and then threw twice");
+        helper.assertTrue(warnings.get(0).getThrown() == null && warnings.get(0).getMessage().getFormattedMessage().contains("NaN"),
+            "the first warning is not the NaN warning: " + warnings.get(0).getMessage().getFormattedMessage());
+        helper.assertTrue(warnings.get(1).getThrown() instanceof IllegalStateException, "the second warning does not carry the provider's exception: " + warnings.get(1).getThrown());
+        helper.succeed();
+    }
+
+    @GameTest
     public void duplicateRegistrationCountsOnce(GameTestHelper helper) {
         GatewayEntity gate = gate(helper);
         ServerPlayer summoner = summoner(helper);
@@ -551,6 +713,31 @@ public final class RewardScaleGameTests {
             RewardScale.unregister(three);
         }
         helper.succeed();
+    }
+
+    /**
+     * Generates an experience reward at {@code scale}, and returns the values of the orbs it spawned around the gate, which it
+     * then removes.
+     */
+    private static List<Integer> spawnOrbs(GameTestHelper helper, GatewayEntity gate, ServerPlayer summoner, Reward reward, double scale) {
+        ServerLevel level = helper.getLevel();
+        AABB box = new AABB(gate.position(), gate.position()).inflate(3);
+        try {
+            reward.generateLoot(level, gate, summoner, stack -> {}, scale);
+            return level.getEntitiesOfClass(ExperienceOrb.class, box).stream().map(ExperienceOrb::getValue).toList();
+        }
+        finally {
+            level.getEntitiesOfClass(ExperienceOrb.class, box).forEach(Entity::discard);
+        }
+    }
+
+    /**
+     * Throws {@code t} without declaring it, as Kotlin code and {@code @SneakyThrows} can. {@code T} is inferred as
+     * {@link RuntimeException}, so callers need not catch a checked {@code t}.
+     */
+    @SuppressWarnings("unchecked")
+    private static <T extends Throwable> double sneakyThrow(Throwable t) throws T {
+        throw (T) t;
     }
 
     /**
@@ -690,6 +877,22 @@ public final class RewardScaleGameTests {
         @Override
         public Codec<? extends Reward> getCodec() {
             throw new UnsupportedOperationException("LegacyReward is never serialized");
+        }
+    }
+
+    /** Keeps the events logged to the logger it is added to. */
+    private static final class CapturingAppender extends AbstractAppender {
+
+        private final List<LogEvent> events = new CopyOnWriteArrayList<>();
+
+        private CapturingAppender() {
+            super("gateways_reward_scale_test", null, null, true, Property.EMPTY_ARRAY);
+        }
+
+        @Override
+        public void append(LogEvent event) {
+            // Log4j can reuse the event object, so keep a copy.
+            this.events.add(event.toImmutable());
         }
     }
 

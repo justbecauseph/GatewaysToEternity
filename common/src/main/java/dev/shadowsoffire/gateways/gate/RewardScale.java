@@ -21,8 +21,8 @@ public final class RewardScale {
     public static final double MAX_SCALE = 16;
 
     private static final List<Provider> PROVIDERS = new CopyOnWriteArrayList<>();
-    /** The provider classes that have already been warned about, so each class logs at most one warning. */
-    private static final Set<Class<?>> WARNED = ConcurrentHashMap.newKeySet();
+    /** The warnings already logged, so each provider class logs at most one warning of each {@link Problem}. */
+    private static final Set<Warning> WARNED = ConcurrentHashMap.newKeySet();
 
     private RewardScale() {}
 
@@ -37,8 +37,8 @@ public final class RewardScale {
          *
          * @param gate     The gateway granting the rewards.
          * @param summoner The summoning player.
-         * @return The factor. NaN, infinite and negative factors are ignored, and a provider that throws a {@link RuntimeException} or
-         *         {@link LinkageError} counts as 1.
+         * @return The factor. NaN, infinite and negative factors are ignored, and a provider that throws an {@link Exception}, checked
+         *         or not, a {@link LinkageError} or an {@link AssertionError} counts as 1.
          */
         double scale(GatewayEntity gate, Player summoner);
     }
@@ -83,9 +83,10 @@ public final class RewardScale {
             try {
                 factor = provider.scale(gate, summoner);
             }
-            catch (RuntimeException | LinkageError e) {
+            catch (Exception | LinkageError | AssertionError e) {
                 // A broken provider counts as 1, so it cannot make a gate lose the rewards that the other providers scale.
-                if (WARNED.add(provider.getClass())) {
+                // Exception covers checked exceptions, which Kotlin code and @SneakyThrows can throw undeclared.
+                if (firstWarning(provider, Problem.THREW)) {
                     Gateways.LOGGER.warn("Reward scale provider {} threw an exception. Its factor is treated as 1.", provider.getClass().getName(), e);
                 }
                 continue;
@@ -105,16 +106,23 @@ public final class RewardScale {
      * Scales a whole-number quantity. The fractional part of {@code n * scale} is rounded up with a probability equal to
      * itself, so the expected result is exactly {@code n * scale}.
      * <p>
+     * The scale is clamped first, since callers can pass any value: NaN and negative scales count as 0, and scales above
+     * {@link #MAX_SCALE} count as {@link #MAX_SCALE}. An infinite or huge scale would otherwise make rewards that loop over the
+     * result run about 2<sup>31</sup> times.
+     * <p>
      * A scale of 1 returns {@code n} without consuming randomness, and so does a product that is already whole.
      *
      * @param n      The authored quantity.
      * @param scale  The factor, such as one returned by {@link #of(GatewayEntity, Player)}.
      * @param random The source of the rounding roll.
-     * @return {@code floor(n * scale)}, plus one with probability equal to the fractional part of {@code n * scale}.
+     * @return {@code floor(n * scale)}, plus one with probability equal to the fractional part of {@code n * scale}, with
+     *         {@code scale} clamped to [0, {@link #MAX_SCALE}].
      */
     public static int scaleCount(int n, double scale, RandomSource random) {
         if (scale == 1) return n;
-        double scaled = n * scale;
+        // Negated, so NaN returns 0 along with zero and negative scales.
+        if (!(scale > 0)) return 0;
+        double scaled = n * Math.min(scale, MAX_SCALE);
         if (scaled >= Integer.MAX_VALUE) return Integer.MAX_VALUE;
         int whole = (int) Math.floor(scaled);
         double fraction = scaled - whole;
@@ -122,8 +130,26 @@ public final class RewardScale {
     }
 
     private static void warnInvalid(Provider provider, double factor) {
-        if (WARNED.add(provider.getClass())) {
+        if (firstWarning(provider, Problem.INVALID_FACTOR)) {
             Gateways.LOGGER.warn("Ignoring reward scale provider {}, which returned {}. Factors must be finite and not negative.", provider.getClass().getName(), factor);
         }
     }
+
+    /**
+     * Records a warning about a provider, and returns whether it is the first of its kind for the provider's class. The two
+     * kinds are tracked apart, so a provider first warned about for an invalid factor still logs a later exception's stack trace.
+     */
+    private static boolean firstWarning(Provider provider, Problem problem) {
+        return WARNED.add(new Warning(provider.getClass(), problem));
+    }
+
+    /** What a provider did wrong. */
+    private enum Problem {
+        /** Returned NaN, an infinite or a negative factor. */
+        INVALID_FACTOR,
+        /** Threw. */
+        THREW
+    }
+
+    private record Warning(Class<?> provider, Problem problem) {}
 }
